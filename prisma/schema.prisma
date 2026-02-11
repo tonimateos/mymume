@@ -50,6 +50,7 @@ model User {
   playlistUrl   String?
   playlistText  String? // Stores raw text if provided
   sourceType    String  @default("spotify_url") // "spotify_url" | "text_list"
+  musicIdentity String? // Gemini analysis result
   
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt

@@ -17,11 +17,13 @@ interface SpotifyPlaylist {
     owner: {
         display_name: string
     }
+    musicIdentity?: string | null
 }
 
 interface TextPlaylist {
     type: 'text'
     content: string
+    musicIdentity?: string | null
 }
 
 type PlaylistData = SpotifyPlaylist | TextPlaylist
@@ -39,6 +41,7 @@ export default function Dashboard() {
     // Data State
     const [playlist, setPlaylist] = useState<PlaylistData | null>(null)
     const [loading, setLoading] = useState(false)
+    const [analyzing, setAnalyzing] = useState(false) // New state for analysis
     const [error, setError] = useState("")
 
     // Validate URL format before submission (basic check)
@@ -64,8 +67,6 @@ export default function Dashboard() {
             }
 
             const data = await res.json()
-            // If GET returns { playlist: null } or similar, handle it.
-            // Our API returns the object directly if found, or { playlist: null } if not found.
             if (!data || data.playlist === null) {
                 setPlaylist(null)
             } else {
@@ -102,6 +103,31 @@ export default function Dashboard() {
                 return
             }
             fetchPlaylist({ text: textInput })
+        }
+    }
+
+    const handleAnalyzeIdentity = async () => {
+        if (!playlist || playlist.type !== 'text') return
+
+        setAnalyzing(true)
+        setError("")
+
+        try {
+            const res = await fetch("/api/analyze-identity", { method: "POST" })
+            const data = await res.json()
+
+            if (!res.ok) {
+                throw new Error(data.error || "Analysis failed")
+            }
+
+            // Update local state with the result
+            setPlaylist(prev => prev ? { ...prev, musicIdentity: data.result } : null)
+
+        } catch (err: any) {
+            console.error("Analysis Error:", err)
+            setError(err.message || "Failed to analyze playlist identity")
+        } finally {
+            setAnalyzing(false)
         }
     }
 
@@ -200,58 +226,103 @@ export default function Dashboard() {
                             </div>
                         )}
                     </form>
-                    {error && <p className="text-red-400 mt-2">{error}</p>}
+                    {error && (
+                        <div className="mt-4 p-4 bg-red-900/50 border border-red-800 text-red-200 rounded-xl text-sm">
+                            {error}
+                        </div>
+                    )}
                 </div>
 
                 {/* Playlist Display */}
                 {playlist && (
-                    <div className="w-full bg-neutral-900/50 border border-neutral-800 rounded-3xl p-6 md:p-10 flex flex-col md:flex-row gap-8 backdrop-blur-sm animate-in fade-in slide-in-from-bottom-4 duration-700">
-                        {playlist.type === 'spotify' ? (
-                            <>
-                                <div className="relative w-60 h-60 md:w-80 md:h-80 flex-shrink-0 mx-auto md:mx-0 shadow-2xl shadow-green-500/10">
-                                    {playlist.images?.[0]?.url ? (
-                                        <Image
-                                            src={playlist.images[0].url}
-                                            alt={playlist.name}
-                                            fill
-                                            className="object-cover rounded-2xl"
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full bg-neutral-800 rounded-2xl flex items-center justify-center text-neutral-600">
-                                            No Cover
+                    <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                        <div className="w-full bg-neutral-900/50 border border-neutral-800 rounded-3xl p-6 md:p-10 flex flex-col md:flex-row gap-8 backdrop-blur-sm">
+                            {playlist.type === 'spotify' ? (
+                                <>
+                                    <div className="relative w-60 h-60 md:w-80 md:h-80 flex-shrink-0 mx-auto md:mx-0 shadow-2xl shadow-green-500/10">
+                                        {playlist.images?.[0]?.url ? (
+                                            <Image
+                                                src={playlist.images[0].url}
+                                                alt={playlist.name}
+                                                fill
+                                                className="object-cover rounded-2xl"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full bg-neutral-800 rounded-2xl flex items-center justify-center text-neutral-600">
+                                                No Cover
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="flex flex-col justify-center space-y-4 text-center md:text-left">
+                                        <div>
+                                            <h3 className="text-4xl md:text-5xl font-bold tracking-tight mb-2">{playlist.name}</h3>
+                                            <p className="text-neutral-400 text-lg line-clamp-3">{playlist.description}</p>
                                         </div>
-                                    )}
-                                </div>
 
-                                <div className="flex flex-col justify-center space-y-4 text-center md:text-left">
-                                    <div>
-                                        <h3 className="text-4xl md:text-5xl font-bold tracking-tight mb-2">{playlist.name}</h3>
-                                        <p className="text-neutral-400 text-lg line-clamp-3">{playlist.description}</p>
+                                        <div className="flex flex-wrap gap-4 justify-center md:justify-start text-sm font-medium text-neutral-300">
+                                            <span className="bg-neutral-800 px-3 py-1 rounded-full">By {playlist.owner.display_name}</span>
+                                            <span className="bg-neutral-800 px-3 py-1 rounded-full">{playlist.tracks.total} Tracks</span>
+                                        </div>
+
+                                        <div className="pt-4">
+                                            <a
+                                                href={playlist.external_urls.spotify}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-2 text-green-400 hover:text-green-300 transition-colors font-semibold"
+                                            >
+                                                Open in Spotify
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                                            </a>
+                                        </div>
                                     </div>
+                                </>
+                            ) : (
+                                <div className="w-full flex flex-col gap-6">
+                                    <div className="flex justify-between items-start">
+                                        <h3 className="text-2xl font-bold text-neutral-200">Saved Text List</h3>
 
-                                    <div className="flex flex-wrap gap-4 justify-center md:justify-start text-sm font-medium text-neutral-300">
-                                        <span className="bg-neutral-800 px-3 py-1 rounded-full">By {playlist.owner.display_name}</span>
-                                        <span className="bg-neutral-800 px-3 py-1 rounded-full">{playlist.tracks.total} Tracks</span>
-                                    </div>
-
-                                    <div className="pt-4">
-                                        <a
-                                            href={playlist.external_urls.spotify}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-2 text-green-400 hover:text-green-300 transition-colors font-semibold"
+                                        {/* Transfer Button - Only show if not already analyzed or if we want to allow re-analysis */}
+                                        <button
+                                            onClick={handleAnalyzeIdentity}
+                                            disabled={analyzing}
+                                            className="px-5 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-900/20 flex items-center gap-2"
                                         >
-                                            Open in Spotify
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                                        </a>
+                                            {analyzing ? (
+                                                <>
+                                                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                    </svg>
+                                                    Analyzing...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    Transfer My Identity
+                                                    <span className="text-xs opacity-80 font-normal ml-1">(AI Analysis)</span>
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+
+                                    <div className="w-full bg-neutral-950 rounded-xl p-6 border border-neutral-800 font-mono text-sm text-neutral-300 whitespace-pre-wrap leading-relaxed max-h-[300px] overflow-y-auto">
+                                        {playlist.content}
                                     </div>
                                 </div>
-                            </>
-                        ) : (
-                            <div className="w-full flex flex-col gap-4">
-                                <h3 className="text-2xl font-bold text-neutral-200">Saved Text List</h3>
-                                <div className="w-full bg-neutral-950 rounded-xl p-6 border border-neutral-800 font-mono text-sm text-neutral-300 whitespace-pre-wrap leading-relaxed max-h-[500px] overflow-y-auto">
-                                    {playlist.content}
+                            )}
+                        </div>
+
+                        {/* Analysis Result Display */}
+                        {playlist.musicIdentity && (
+                            <div className="w-full bg-gradient-to-b from-indigo-900/20 to-neutral-900/50 border border-indigo-500/30 rounded-3xl p-8 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-700">
+                                <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-300 to-indigo-300 bg-clip-text text-transparent mb-6 flex items-center gap-3">
+                                    <span className="text-3xl">✨</span> Your Musical Identity
+                                </h3>
+                                <div className="prose prose-invert max-w-none">
+                                    <div className="whitespace-pre-wrap text-neutral-200 leading-relaxed text-lg">
+                                        {playlist.musicIdentity}
+                                    </div>
                                 </div>
                             </div>
                         )}

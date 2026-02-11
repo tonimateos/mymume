@@ -71,7 +71,7 @@ export async function GET(req: Request) {
     try {
         const user = await prisma.user.findUnique({
             where: { id: session.user.id },
-            select: { playlistUrl: true, playlistText: true, sourceType: true },
+            select: { playlistUrl: true, playlistText: true, sourceType: true, musicIdentity: true },
         })
 
         if (!user) {
@@ -80,7 +80,7 @@ export async function GET(req: Request) {
 
         // Handle Text List
         if (user.sourceType === 'text_list' && user.playlistText) {
-            return NextResponse.json({ type: 'text', content: user.playlistText })
+            return NextResponse.json({ type: 'text', content: user.playlistText, musicIdentity: user.musicIdentity })
         }
 
         // Handle Spotify URL
@@ -94,7 +94,7 @@ export async function GET(req: Request) {
         }
 
         const playlistData = await getPlaylist(playlistId)
-        return NextResponse.json({ type: 'spotify', ...playlistData })
+        return NextResponse.json({ type: 'spotify', ...playlistData, musicIdentity: user.musicIdentity })
 
     } catch (error) {
         console.error("Error fetching saved playlist:", error)
