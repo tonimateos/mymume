@@ -135,7 +135,7 @@ export default function Dashboard() {
         <div className="min-h-screen bg-neutral-950 text-white p-6 md:p-12">
             <header className="flex justify-between items-center mb-12">
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
-                    MyMumi
+                    MyMuMe
                 </h1>
                 <div className="flex items-center gap-4">
                     {session?.user?.image && (

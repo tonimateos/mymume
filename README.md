@@ -40,7 +40,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 * Go to the Spotify Developer Dashboard and log in.
 * Click Create app.
-* App name: MyMumi.
+* App name: MyMuMe.
 * Redirect URI: You can just put http://localhost:3000 (we are using "Client Credentials" flow which doesn't actually use the redirect, but the form might require one).
 * Click Save.
 * Click on your new app to see the Settings.

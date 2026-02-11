@@ -7,7 +7,7 @@ export default function Login() {
         <div className="flex flex-col items-center justify-center min-h-screen bg-neutral-950 text-white">
             <div className="text-center space-y-6 max-w-md px-6">
                 <h1 className="text-5xl font-extrabold tracking-tight bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
-                    MyMumi
+                    MyMuMe
                 </h1>
                 <p className="text-neutral-400 text-lg">
                     Connect your Google account to save and manage your favorite Spotify playlist.

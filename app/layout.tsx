@@ -6,8 +6,8 @@ import Providers from "@/components/Providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "MyMumi - Your Playlist",
-  description: "Save and view your favorite Spotify playlist.",
+  title: "MyMuMe - My Musical Me",
+  description: "Play with My Musical Me",
 };
 
 export default function RootLayout({
