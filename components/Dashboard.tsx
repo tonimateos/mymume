@@ -346,9 +346,38 @@ export default function Dashboard() {
                                     <span className="text-3xl">✨</span> Your Musical Identity
                                 </h3>
                                 <div className="prose prose-invert max-w-none">
-                                    <div className="whitespace-pre-wrap text-neutral-200 leading-relaxed text-lg">
-                                        {playlist.musicIdentity}
-                                    </div>
+                                    {(() => {
+                                        try {
+                                            const categories: string[] = JSON.parse(playlist.musicIdentity)
+                                            return (
+                                                <div className="space-y-4">
+                                                    <p className="text-lg text-neutral-300 font-medium">
+                                                        The music you love can be summarized in <span className="text-indigo-400 font-bold">{categories.length}</span> categories:
+                                                    </p>
+                                                    <div className="flex flex-col gap-3 mt-4">
+                                                        {categories.map((category, index) => (
+                                                            <div key={index} className="bg-white/5 border border-white/10 rounded-xl p-4 flex gap-4 items-start hover:bg-white/10 transition-colors">
+                                                                <span className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-indigo-500/20 text-indigo-300 rounded-full text-sm font-bold border border-indigo-500/30">
+                                                                    {index + 1}
+                                                                </span>
+                                                                <div className="text-neutral-200 leading-relaxed">
+                                                                    <span className="font-semibold text-indigo-200 block mb-1">Category {index + 1}</span>
+                                                                    {category}
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )
+                                        } catch (_) {
+                                            // Fallback for flat strings (legacy data or errors)
+                                            return (
+                                                <div className="whitespace-pre-wrap text-neutral-200 leading-relaxed text-lg">
+                                                    {playlist.musicIdentity}
+                                                </div>
+                                            )
+                                        }
+                                    })()}
                                 </div>
                             </div>
                         )}

@@ -38,17 +38,27 @@ export async function POST(req: Request) {
         const response = await result.response
         const textResponse = response.text().trim()
 
-        // Validation logic
-        if (textResponse.toUpperCase() === "NO" || textResponse.length < 20) {
+        // Clean and parse the response
+        const cleanedResponse = textResponse.replace(/```json/g, "").replace(/```/g, "").trim()
+
+        let identityCategories: string[]
+        try {
+            identityCategories = JSON.parse(cleanedResponse)
+            if (!Array.isArray(identityCategories) || !identityCategories.every(item => typeof item === 'string')) {
+                throw new Error("Response is not a string array")
+            }
+        } catch (e) {
+            console.error("Failed to parse Gemini response:", textResponse)
             return NextResponse.json({
-                error: "The text does not look like a music playlist. Please try a different text."
-            }, { status: 400 })
+                error: "analysis failed"
+            }, { status: 500 })
         }
 
-        // Save result to DB
+        // Save result to DB as minified JSON
+        const jsonResult = JSON.stringify(identityCategories)
         await prisma.user.update({
             where: { id: session.user.id },
-            data: { musicIdentity: textResponse },
+            data: { musicIdentity: jsonResult },
         })
 
         return NextResponse.json({ result: textResponse, prompt })
