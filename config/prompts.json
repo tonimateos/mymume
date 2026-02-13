@@ -1,3 +1,3 @@
 {
-    "identityAnalysis": "Here is a music playlist. Classify the music in it in either one, two or three categories, depending on whether it is diverse enough. For each, describe very precisely the type of music of that category, including genre, relevant years, typical tempos, etc., be precise rather than generic. If the text I am sending does not look like a music playlist, just reply with one word: NO. Here is the playlist: "
+    "identityAnalysis": "I will provide a music playlist. Classify the music in the playlist in either one, two or three categories, depending on whether the playlist is diverse enough. Do not return any other thing but one array of at most 3 elements, where each element is the description of each category. Each description must describe very precisely the type of music in that category, including genre, relevant years, typical tempos, typical bands, etc., be precise rather than generic. Here is the playlist: "
 }

@@ -51,7 +51,7 @@ export async function POST(req: Request) {
             data: { musicIdentity: textResponse },
         })
 
-        return NextResponse.json({ result: textResponse })
+        return NextResponse.json({ result: textResponse, prompt })
 
     } catch (error) {
         console.error("Error analyzing identity:", error)

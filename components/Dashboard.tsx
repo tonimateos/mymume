@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useSession, signOut } from "next-auth/react"
 import Image from "next/image"
+import prompts from "@/config/prompts.json"
 
 interface SpotifyPlaylist {
     type: 'spotify'
@@ -24,6 +25,7 @@ interface TextPlaylist {
     type: 'text'
     content: string
     musicIdentity?: string | null
+    prompt?: string
 }
 
 type PlaylistData = SpotifyPlaylist | TextPlaylist
@@ -121,7 +123,10 @@ export default function Dashboard() {
             }
 
             // Update local state with the result
-            setPlaylist(prev => prev ? { ...prev, musicIdentity: data.result } : null)
+            setPlaylist((prev) => {
+                if (!prev || prev.type !== 'text') return prev
+                return { ...prev, musicIdentity: data.result, prompt: data.prompt }
+            })
 
         } catch (err: any) {
             console.error("Analysis Error:", err)
@@ -130,6 +135,10 @@ export default function Dashboard() {
             setAnalyzing(false)
         }
     }
+
+    const livePrompt = playlist?.type === 'text'
+        ? `${prompts.identityAnalysis}\n${playlist.content}`
+        : null
 
     return (
         <div className="min-h-screen bg-neutral-950 text-white p-6 md:p-12">
@@ -340,6 +349,18 @@ export default function Dashboard() {
                                     <div className="whitespace-pre-wrap text-neutral-200 leading-relaxed text-lg">
                                         {playlist.musicIdentity}
                                     </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Prompt Display */}
+                        {livePrompt && (
+                            <div className="w-full bg-neutral-900/30 border border-neutral-800 rounded-2xl p-6 animate-in fade-in slide-in-from-bottom-2 duration-700 delay-100 mt-8">
+                                <h4 className="text-sm font-semibold text-neutral-500 uppercase tracking-wider mb-4">
+                                    Generated Prompt <span className="text-xs normal-case opacity-50 ml-2">(Live Preview)</span>
+                                </h4>
+                                <div className="font-mono text-xs text-neutral-400 whitespace-pre-wrap bg-black/50 p-4 rounded-xl border border-neutral-800/50 leading-relaxed overflow-x-auto">
+                                    {livePrompt}
                                 </div>
                             </div>
                         )}
