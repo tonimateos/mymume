@@ -44,6 +44,8 @@ export default function Dashboard() {
     const [playlist, setPlaylist] = useState<PlaylistData | null>(null)
     const [loading, setLoading] = useState(false)
     const [analyzing, setAnalyzing] = useState(false) // New state for analysis
+    const [isSinging, setIsSinging] = useState(false)
+    const [audioUrl, setAudioUrl] = useState("")
     const [error, setError] = useState("")
 
     // Validate URL format before submission (basic check)
@@ -133,6 +135,32 @@ export default function Dashboard() {
             setError(err.message || "Failed to analyze playlist identity")
         } finally {
             setAnalyzing(false)
+        }
+    }
+
+    const handleSing = async () => {
+        if (!playlist || !playlist.musicIdentity) return
+
+        setIsSinging(true)
+        setAudioUrl("")
+        setError("")
+
+        try {
+            const res = await fetch("/api/sing", { method: "POST" })
+            const data = await res.json()
+
+            if (!res.ok) {
+                throw new Error(data.error || "Failed to generate audio")
+            }
+
+            if (data.audioUrl) {
+                setAudioUrl(data.audioUrl)
+            }
+        } catch (err: any) {
+            console.error("Singing Error:", err)
+            setError(err.message || "Failed to generate song")
+        } finally {
+            setIsSinging(false)
         }
     }
 
@@ -230,7 +258,7 @@ export default function Dashboard() {
                                     </p>
                                     <ol className="list-decimal list-inside space-y-1 text-xs opacity-80 text-left px-4">
                                         <li>Select your source (e.g., Spotify)</li>
-                                        <li>Select destination as <strong>"Export to Text"</strong></li>
+                                        <li>Select destination as <strong>&quot;Export to Text&quot;</strong></li>
                                         <li>Copy the result and paste it below</li>
                                     </ol>
                                 </div>
@@ -385,6 +413,49 @@ export default function Dashboard() {
                                         }
                                     })()}
                                 </div>
+                            </div>
+                        )}
+
+                        {/* Sing Button Section */}
+                        {playlist.musicIdentity && (
+                            <div className="w-full flex flex-col items-center mt-8 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
+                                {!audioUrl && (
+                                    <button
+                                        onClick={handleSing}
+                                        disabled={isSinging}
+                                        className="px-8 py-4 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-400 hover:to-rose-400 text-white font-bold text-lg rounded-full shadow-lg shadow-pink-500/20 transform hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3"
+                                    >
+                                        {isSinging ? (
+                                            <>
+                                                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                                Composing...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span>🎤</span> Please Sing, MyMuMe
+                                            </>
+                                        )}
+                                    </button>
+                                )}
+
+                                {audioUrl && (
+                                    <div className="w-full max-w-md bg-neutral-900/50 border border-pink-500/30 rounded-2xl p-6 backdrop-blur-sm animate-in zoom-in duration-500">
+                                        <h4 className="text-center text-pink-300 font-semibold mb-4">Now Playing: MyMuMe Original</h4>
+                                        <audio controls autoPlay className="w-full">
+                                            <source src={audioUrl} type="audio/mpeg" />
+                                            Your browser does not support the audio element.
+                                        </audio>
+                                        <button
+                                            onClick={() => setAudioUrl("")}
+                                            className="text-xs text-neutral-500 hover:text-white mt-4 mx-auto block transition-colors"
+                                        >
+                                            Generate Another
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         )}
 
