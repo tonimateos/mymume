@@ -44,17 +44,36 @@ export async function POST(req: Request) {
 
     try {
         const playlistData = await getPlaylist(playlistId)
+        console.log(`[API] Fetched playlist data`)
+
+        // Convert tracks to text list
+        let textList = ""
+        if (playlistData.tracks && playlistData.tracks.items) {
+            textList = playlistData.tracks.items
+                .map((item: { track: { name: string, artists: { name: string }[] } | null }) => item.track)
+                .filter((track: { name: string, artists: { name: string }[] } | null): track is { name: string, artists: { name: string }[] } => track !== null)
+                .map((track: { name: string, artists: { name: string }[] }) => `${track.artists[0]?.name || 'Unknown Artist'} - ${track.name}`)
+                .join('\n')
+
+            console.log(`[API] Generated text list length: ${textList.length}`)
+            if (textList.length > 0) {
+                console.log(`[API] First line of text list: ${textList.split('\n')[0]}`)
+            }
+        } else {
+            console.log("[API] No tracks found to convert.")
+        }
 
         await prisma.user.update({
             where: { id: session.user.id },
             data: {
                 playlistUrl: url,
-                playlistText: null,
-                sourceType: 'spotify_url'
+                playlistText: textList,
+                sourceType: 'text_list' // Switch to text list view
             },
         })
+        console.log("[API] User updated with playlist text.")
 
-        return NextResponse.json({ ...playlistData, type: 'spotify' })
+        return NextResponse.json({ type: 'text', content: textList })
     } catch (error) {
         console.error("Error in playlist route:", error)
         return NextResponse.json({ error: "Failed to fetch playlist" }, { status: 500 })
@@ -88,13 +107,13 @@ export async function GET(req: Request) {
             return NextResponse.json({ playlist: null })
         }
 
-        const playlistId = extractPlaylistId(user.playlistUrl)
-        if (!playlistId) {
-            return NextResponse.json({ playlist: null })
+        // If we have text content (legacy or new), return it
+        if (user.playlistText) {
+            return NextResponse.json({ type: 'text', content: user.playlistText, musicIdentity: user.musicIdentity })
         }
 
-        const playlistData = await getPlaylist(playlistId)
-        return NextResponse.json({ ...playlistData, type: 'spotify' })
+        // Strictly do not fetch from Spotify on GET. 
+        return NextResponse.json({ playlist: null })
 
     } catch (error) {
         console.error("Error fetching saved playlist:", error)

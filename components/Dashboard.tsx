@@ -12,7 +12,7 @@ interface SpotifyPlaylist {
     description: string
     images: { url: string }[]
     external_urls: { spotify: string }
-    tracks: {
+    tracks?: {
         total: number
     }
     owner: {
@@ -228,27 +228,21 @@ export default function Dashboard() {
 
                     <form onSubmit={handleSubmit} className="relative mt-2">
                         {activeTab === "url" ? (
-                            <div className="relative opacity-60">
+                            <div className="relative">
                                 <input
                                     type="text"
                                     value={url}
                                     onChange={(e) => setUrl(e.target.value)}
                                     placeholder="https://open.spotify.com/playlist/..."
-                                    disabled={true}
-                                    className="w-full px-6 py-4 bg-neutral-900 border border-neutral-800 rounded-full focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-lg placeholder-neutral-600 transition-all pr-24 cursor-not-allowed"
+                                    className="w-full px-6 py-4 bg-neutral-900 border border-neutral-800 rounded-full focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-lg placeholder-neutral-600 transition-all pr-24"
                                 />
                                 <button
                                     type="submit"
-                                    disabled={true}
-                                    className="absolute right-2 top-2 bottom-2 px-6 bg-neutral-700 text-neutral-400 font-semibold rounded-full cursor-not-allowed"
+                                    disabled={loading || !url}
+                                    className="absolute right-2 top-2 bottom-2 px-6 bg-green-500 hover:bg-green-400 text-black font-semibold rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    Saved
+                                    {loading ? "Saving..." : "Save"}
                                 </button>
-                                <div className="absolute -bottom-8 left-0 right-0 text-center">
-                                    <span className="text-xs text-yellow-500 bg-yellow-900/20 px-3 py-1 rounded-full border border-yellow-800/50">
-                                        Not yet available
-                                    </span>
-                                </div>
                             </div>
                         ) : (
                             <div className="relative space-y-4">
@@ -316,7 +310,7 @@ export default function Dashboard() {
 
                                         <div className="flex flex-wrap gap-4 justify-center md:justify-start text-sm font-medium text-neutral-300">
                                             <span className="bg-neutral-800 px-3 py-1 rounded-full">By {playlist.owner.display_name}</span>
-                                            <span className="bg-neutral-800 px-3 py-1 rounded-full">{playlist.tracks.total} Tracks</span>
+                                            <span className="bg-neutral-800 px-3 py-1 rounded-full">{playlist.tracks?.total || 0} Tracks</span>
                                         </div>
 
                                         <div className="pt-4">

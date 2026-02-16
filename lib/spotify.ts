@@ -24,12 +24,27 @@ export const searchTrack = async (query: string) => {
 export const getPlaylist = async (playlistId: string) => {
     try {
         const data = await spotifyApi.clientCredentialsGrant()
-        spotifyApi.setAccessToken(data.body["access_token"])
+        const token = data.body["access_token"]
+        // spotifyApi.setAccessToken(token) // Not needed for fetch
 
-        const playlist = await spotifyApi.getPlaylist(playlistId)
-        return playlist.body
+        const fields = "tracks.items(track(name,artists(name)))";
+        const encodedFields = encodeURIComponent(fields);
+        const url = `https://api.spotify.com/v1/playlists/${playlistId}?market=ES&fields=${encodedFields}`;
+        console.log(`[Spotify Lib] Fetching playlist from: ${url}`);
+
+        const response = await fetch(url, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        })
+
+        if (!response.ok) {
+            throw new Error(`Spotify API error: ${response.status} ${response.statusText}`)
+        }
+
+        const playlist = await response.json()
+        return playlist
     } catch (error) {
-        console.error("Error fetching playlist:", error)
         throw error
     }
 }
