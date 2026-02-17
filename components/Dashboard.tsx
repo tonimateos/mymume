@@ -464,7 +464,7 @@ export default function Dashboard() {
                     </div>
                 )}
 
-                {error && <div className="mt-8 p-4 bg-red-900/20 text-red-300 rounded-xl text-center border border-red-900/50">{error}</div>}
+                {error && currentStep !== 3 && <div className="mt-8 p-4 bg-red-900/20 text-red-300 rounded-xl text-center border border-red-900/50">{error}</div>}
             </main>
         </div>
     )
