@@ -28,9 +28,11 @@ export const getPlaylist = async (playlistId: string) => {
         // spotifyApi.setAccessToken(token) // Not needed for fetch
 
         const fields = "tracks.items(track(name,artists(name)))";
-        const encodedFields = encodeURIComponent(fields);
-        const url = `https://api.spotify.com/v1/playlists/${playlistId}?market=ES&fields=${encodedFields}`;
-        console.log(`[Spotify Lib] Fetching playlist from: ${url}`);
+        const params = new URLSearchParams({
+            market: "ES",
+            fields: fields
+        });
+        const url = `https://api.spotify.com/v1/playlists/${playlistId}?${params.toString()}`;
 
         const response = await fetch(url, {
             headers: {
