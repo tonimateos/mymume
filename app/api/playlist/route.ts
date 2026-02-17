@@ -12,7 +12,24 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json()
-    const { url, text } = body
+    const { url, text, nickname, voiceType } = body
+
+    // Handle generic profile update (Step 1 & 2)
+    if (nickname || voiceType) {
+        try {
+            await prisma.user.update({
+                where: { id: session.user.id },
+                data: {
+                    ...(nickname && { nickname }),
+                    ...(voiceType && { voiceType })
+                }
+            })
+            return NextResponse.json({ success: true })
+        } catch (error) {
+            console.error("Error updating profile:", error)
+            return NextResponse.json({ error: "Failed to update profile" }, { status: 500 })
+        }
+    }
 
     if (!url && !text) {
         return NextResponse.json({ error: "URL or Text is required" }, { status: 400 })
@@ -90,7 +107,14 @@ export async function GET(req: Request) {
     try {
         const user = await prisma.user.findUnique({
             where: { id: session.user.id },
-            select: { playlistUrl: true, playlistText: true, sourceType: true, musicIdentity: true },
+            select: {
+                playlistUrl: true,
+                playlistText: true,
+                sourceType: true,
+                musicIdentity: true,
+                nickname: true,
+                voiceType: true
+            },
         })
 
         if (!user) {
@@ -99,7 +123,13 @@ export async function GET(req: Request) {
 
         // Handle Text List
         if (user.sourceType === 'text_list' && user.playlistText) {
-            return NextResponse.json({ type: 'text', content: user.playlistText, musicIdentity: user.musicIdentity })
+            return NextResponse.json({
+                type: 'text',
+                content: user.playlistText,
+                musicIdentity: user.musicIdentity,
+                nickname: user.nickname,
+                voiceType: user.voiceType
+            })
         }
 
         // Handle Spotify URL
@@ -109,7 +139,13 @@ export async function GET(req: Request) {
 
         // If we have text content (legacy or new), return it
         if (user.playlistText) {
-            return NextResponse.json({ type: 'text', content: user.playlistText, musicIdentity: user.musicIdentity })
+            return NextResponse.json({
+                type: 'text',
+                content: user.playlistText,
+                musicIdentity: user.musicIdentity,
+                nickname: user.nickname,
+                voiceType: user.voiceType
+            })
         }
 
         // Strictly do not fetch from Spotify on GET. 

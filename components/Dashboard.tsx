@@ -30,443 +30,389 @@ interface TextPlaylist {
 
 type PlaylistData = SpotifyPlaylist | TextPlaylist
 
+interface UserProfile {
+    id: string
+    nickname: string | null
+    voiceType: string | null
+    image: string | null
+    musicIdentity: string | null
+}
+
 export default function Dashboard() {
     const { data: session } = useSession()
 
-    // UI State
-    const [activeTab, setActiveTab] = useState<"text" | "url">("text")
+    // Stepper State
+    const [currentStep, setCurrentStep] = useState(1)
 
-    // Form State
+    // Step 1: Nickname State
+    const [nickname, setNickname] = useState("")
+
+    // Step 2: Voice Type State
+    const [voiceType, setVoiceType] = useState<"MALE" | "FEMALE" | "ANY" | null>(null)
+
+    // Step 3: Playlist State
+    const [activeTab, setActiveTab] = useState<"text" | "url">("text")
     const [url, setUrl] = useState("")
     const [textInput, setTextInput] = useState("")
-
-    // Data State
     const [playlist, setPlaylist] = useState<PlaylistData | null>(null)
+
+    // General State
     const [loading, setLoading] = useState(false)
-    const [analyzing, setAnalyzing] = useState(false) // New state for analysis
+    const [analyzing, setAnalyzing] = useState(false)
     const [isSinging, setIsSinging] = useState(false)
     const [audioUrl, setAudioUrl] = useState("")
     const [error, setError] = useState("")
+    const [publicProfiles, setPublicProfiles] = useState<UserProfile[]>([])
 
-    // Validate URL format before submission (basic check)
-    const isValidSpotifyUrl = (input: string) => input.includes("open.spotify.com/playlist/")
+    // Load initial data
+    useEffect(() => {
+        fetchProfileAndPlaylist()
+    }, [])
 
-    const fetchPlaylist = async (payload?: { url?: string, text?: string }) => {
+    const fetchProfileAndPlaylist = async () => {
         setLoading(true)
-        setError("")
         try {
-            const res = await fetch("/api/playlist", {
-                method: payload ? "POST" : "GET",
-                headers: { "Content-Type": "application/json" },
-                body: payload ? JSON.stringify(payload) : undefined
-            })
-
-            if (!res.ok) {
-                if (res.status === 404) {
-                    setPlaylist(null)
-                    return
-                }
+            const res = await fetch("/api/playlist")
+            if (res.ok) {
                 const data = await res.json()
-                throw new Error(data.error || "Failed to fetch")
-            }
+                if (data.nickname) setNickname(data.nickname)
+                if (data.voiceType) setVoiceType(data.voiceType)
 
-            const data = await res.json()
-            if (!data || data.playlist === null) {
-                setPlaylist(null)
-            } else {
-                setPlaylist(data)
-                // Clear inputs on success
-                if (payload?.url) setUrl("")
-                if (payload?.text) setTextInput("")
+                if (data.type === 'text' || data.type === 'spotify') {
+                    setPlaylist(data)
+                }
+
+                // Determine step based on data existence
+                if (!data.nickname) setCurrentStep(1)
+                else if (!data.voiceType) setCurrentStep(2)
+                else if (!data.content && !data.id) setCurrentStep(3) // No playlist
+                else if (!data.musicIdentity) setCurrentStep(4) // Has playlist, needs analysis
+                else setCurrentStep(5) // Done
             }
-        } catch (err: any) {
+        } catch (err) {
             console.error(err)
-            setError(err.message)
         } finally {
             setLoading(false)
         }
     }
 
-    // Load saved playlist on mount
-    useEffect(() => {
-        fetchPlaylist()
-    }, [])
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault()
-
-        if (activeTab === "url") {
-            if (!isValidSpotifyUrl(url)) {
-                setError("Please enter a valid Spotify Playlist URL")
-                return
-            }
-            fetchPlaylist({ url })
-        } else {
-            if (!textInput.trim()) {
-                setError("Please enter a list of songs")
-                return
-            }
-            fetchPlaylist({ text: textInput })
+    const saveStep1 = async () => {
+        if (!nickname.trim()) return setError("Please enter a nickname")
+        setLoading(true)
+        setError("")
+        try {
+            await fetch("/api/playlist", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ nickname })
+            })
+            setCurrentStep(2)
+        } catch (err) {
+            setError("Failed to save nickname")
+        } finally {
+            setLoading(false)
         }
     }
 
-    const handleAnalyzeIdentity = async () => {
-        if (!playlist || playlist.type !== 'text') return
+    const saveStep2 = async (selectedVoice: "MALE" | "FEMALE" | "ANY") => {
+        setVoiceType(selectedVoice)
+        setLoading(true)
+        setError("")
+        try {
+            await fetch("/api/playlist", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ voiceType: selectedVoice })
+            })
+            setCurrentStep(3)
+        } catch (err) {
+            setError("Failed to save voice type")
+        } finally {
+            setLoading(false)
+        }
+    }
 
-        setAnalyzing(true)
+    const saveStep3 = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setLoading(true)
         setError("")
 
+        const payload: any = {}
+        if (activeTab === "url") {
+            if (!url.includes("open.spotify.com/playlist/")) {
+                setLoading(false)
+                return setError("Please enter a valid Spotify Playlist URL")
+            }
+            payload.url = url
+        } else {
+            if (!textInput.trim()) {
+                setLoading(false)
+                return setError("Please enter a list of songs")
+            }
+            payload.text = textInput
+        }
+
+        try {
+            const res = await fetch("/api/playlist", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            })
+
+            if (!res.ok) throw new Error("Failed to save playlist")
+
+            const data = await res.json()
+            setPlaylist(data)
+            setCurrentStep(4)
+        } catch (err: any) {
+            setError(err.message || "Failed to save playlist")
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleAnalyze = async () => {
+        setAnalyzing(true)
+        setError("")
         try {
             const res = await fetch("/api/analyze-identity", { method: "POST" })
             const data = await res.json()
+            if (!res.ok) throw new Error(data.error || "Analysis failed")
 
-            if (!res.ok) {
-                throw new Error(data.error || "Analysis failed")
-            }
-
-            // Update local state with the result
-            setPlaylist((prev) => {
-                if (!prev || prev.type !== 'text') return prev
-                return { ...prev, musicIdentity: data.result, prompt: data.prompt }
-            })
-
+            setPlaylist(prev => prev ? { ...prev, musicIdentity: data.result } : null)
+            setCurrentStep(5)
+            fetchPublicProfiles()
         } catch (err: any) {
-            console.error("Analysis Error:", err)
-            setError(err.message || "Failed to analyze playlist identity")
+            setError(err.message || "Failed to analyze")
         } finally {
             setAnalyzing(false)
         }
     }
 
-    const handleSing = async () => {
-        if (!playlist || !playlist.musicIdentity) return
-
-        setIsSinging(true)
-        setAudioUrl("")
-        setError("")
-
+    const fetchPublicProfiles = async () => {
         try {
-            const res = await fetch("/api/sing", { method: "POST" })
-            const data = await res.json()
-
-            if (!res.ok) {
-                throw new Error(data.error || "Failed to generate audio")
+            const res = await fetch("/api/public-profiles")
+            if (res.ok) {
+                const data = await res.json()
+                setPublicProfiles(data.profiles || [])
             }
-
-            if (data.audioUrl) {
-                setAudioUrl(data.audioUrl)
-            }
-        } catch (err: any) {
-            console.error("Singing Error:", err)
-            setError(err.message || "Failed to generate song")
-        } finally {
-            setIsSinging(false)
+        } catch (err) {
+            console.error(err)
         }
     }
 
-    const livePrompt = playlist?.type === 'text'
-        ? `${prompts.identityAnalysis}\n${playlist.content}`
-        : null
+    // Fetch profiles if we start at step 5
+    useEffect(() => {
+        if (currentStep === 5) fetchPublicProfiles()
+    }, [currentStep])
+
 
     return (
-        <div className="min-h-screen bg-neutral-950 text-white p-6 md:p-12">
-            <header className="flex justify-between items-center mb-12">
+        <div className="min-h-screen bg-neutral-950 text-white p-6 md:p-12 font-sans">
+            <header className="flex justify-between items-center mb-12 max-w-4xl mx-auto">
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
                     MyMuMe
                 </h1>
                 <div className="flex items-center gap-4">
+                    <span className="text-neutral-400 text-sm hidden md:inline">Step {currentStep} of 5</span>
                     {session?.user?.image && (
-                        <Image
-                            src={session.user.image}
-                            alt="Profile"
-                            width={32}
-                            height={32}
-                            className="rounded-full border border-neutral-700"
-                        />
+                        <Image src={session.user.image} alt="Profile" width={32} height={32} className="rounded-full border border-neutral-700" />
                     )}
-                    <button
-                        onClick={() => signOut()}
-                        className="text-sm text-neutral-400 hover:text-white transition-colors"
-                    >
-                        Sign out
-                    </button>
+                    <button onClick={() => signOut()} className="text-sm text-neutral-400 hover:text-white transition-colors">Sign out</button>
                 </div>
             </header>
 
-            <main className="max-w-4xl mx-auto flex flex-col items-center gap-12">
-
-                {/* Input Section */}
-                <div className="w-full max-w-xl text-center space-y-4">
-                    <h2 className="text-3xl md:text-4xl font-semibold">
-                        {playlist ? "Your Saved Playlist" : "Add a Playlist"}
-                    </h2>
-                    <p className="text-neutral-400">
-                        {playlist ? "Replace it by entering a new one below." : "Import a playlist to get started."}
-                    </p>
-
-                    {/* Tabs */}
-                    <div className="flex justify-center gap-4 mt-6 mb-4">
+            <main className="max-w-2xl mx-auto">
+                {/* Step 1: Nickname */}
+                {currentStep === 1 && (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="text-center">
+                            <h2 className="text-3xl font-bold mb-2">What should we call you?</h2>
+                            <p className="text-neutral-400">Choose a nickname for your MyMuMe identity.</p>
+                        </div>
+                        <input
+                            type="text"
+                            value={nickname}
+                            onChange={(e) => setNickname(e.target.value)}
+                            placeholder="e.g. MelodyMaker"
+                            className="w-full px-6 py-4 bg-neutral-900 border border-neutral-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-green-500 text-lg text-center"
+                        />
                         <button
-                            onClick={() => { setActiveTab("text"); setError("") }}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${activeTab === "text"
-                                ? "bg-neutral-800 text-white border border-neutral-700"
-                                : "text-neutral-500 hover:text-neutral-300"
-                                }`}
+                            onClick={saveStep1}
+                            disabled={loading || !nickname}
+                            className="w-full py-4 bg-white text-black font-bold rounded-2xl hover:bg-neutral-200 transition-colors disabled:opacity-50"
                         >
-                            Paste Text List
-                        </button>
-                        <button
-                            onClick={() => { setActiveTab("url"); setError("") }}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${activeTab === "url"
-                                ? "bg-neutral-800 text-white border border-neutral-700"
-                                : "text-neutral-500 hover:text-neutral-300"
-                                }`}
-                        >
-                            Spotify URL
+                            Next
                         </button>
                     </div>
+                )}
 
-                    <form onSubmit={handleSubmit} className="relative mt-2">
-                        {activeTab === "url" ? (
-                            <div className="relative">
+                {/* Step 2: Voice Type */}
+                {currentStep === 2 && (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="text-center">
+                            <h2 className="text-3xl font-bold mb-2">Choose your voice</h2>
+                            <p className="text-neutral-400">Who should sing your life's soundtrack?</p>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {[
+                                { id: "FEMALE", label: "Female", icon: "👩‍🎤" },
+                                { id: "MALE", label: "Male", icon: "👨‍🎤" },
+                                { id: "ANY", label: "I don't care", icon: "🎲" }
+                            ].map((voice) => (
+                                <button
+                                    key={voice.id}
+                                    onClick={() => saveStep2(voice.id as any)}
+                                    className="p-6 bg-neutral-900 border border-neutral-800 rounded-2xl hover:border-green-500 hover:bg-neutral-800 transition-all group"
+                                >
+                                    <div className="text-4xl mb-3 group-hover:scale-110 transition-transform duration-300">{voice.icon}</div>
+                                    <div className="font-semibold">{voice.label}</div>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Step 3: Playlist */}
+                {currentStep === 3 && (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="text-center">
+                            <h2 className="text-3xl font-bold mb-2">Import your music</h2>
+                            <p className="text-neutral-400">Provide a playlist to shape your identity.</p>
+                        </div>
+
+                        <div className="flex justify-center gap-4 mb-6">
+                            <button onClick={() => setActiveTab("text")} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${activeTab === "text" ? "bg-neutral-800 text-white" : "text-neutral-500"}`}>Paste Text List</button>
+                            <button onClick={() => setActiveTab("url")} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${activeTab === "url" ? "bg-neutral-800 text-white" : "text-neutral-500"}`}>Spotify URL</button>
+                        </div>
+
+                        <form onSubmit={saveStep3} className="space-y-4">
+                            {activeTab === "url" ? (
                                 <input
                                     type="text"
                                     value={url}
                                     onChange={(e) => setUrl(e.target.value)}
                                     placeholder="https://open.spotify.com/playlist/..."
-                                    className="w-full px-6 py-4 bg-neutral-900 border border-neutral-800 rounded-full focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-lg placeholder-neutral-600 transition-all pr-24"
+                                    className="w-full px-6 py-4 bg-neutral-900 border border-neutral-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-green-500"
                                 />
-                                <button
-                                    type="submit"
-                                    disabled={loading || !url}
-                                    className="absolute right-2 top-2 bottom-2 px-6 bg-green-500 hover:bg-green-400 text-black font-semibold rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {loading ? "Saving..." : "Save"}
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="relative space-y-4">
-                                <div className="text-sm text-neutral-400 bg-neutral-900/50 p-4 rounded-2xl border border-neutral-800">
-                                    <p className="mb-2">
-                                        <span className="text-white font-medium">Tip:</span> Use <a href="https://www.tunemymusic.com/home" target="_blank" rel="noopener noreferrer" className="text-green-400 hover:underline">Tune My Music</a> to export your playlist.
-                                    </p>
-                                    <ol className="list-decimal list-inside space-y-1 text-xs opacity-80 text-left px-4">
-                                        <li>Select your source (e.g., Spotify)</li>
-                                        <li>Select destination as <strong>&quot;Export to Text&quot;</strong></li>
-                                        <li>Copy the result and paste it below</li>
-                                    </ol>
-                                </div>
-
+                            ) : (
                                 <textarea
                                     value={textInput}
                                     onChange={(e) => setTextInput(e.target.value)}
-                                    placeholder="Copy-paste a list of Artist - Songs in any format that an AI can understand"
-                                    rows={6}
-                                    className="w-full px-6 py-4 bg-neutral-900 border border-neutral-800 rounded-3xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-lg placeholder-neutral-600 transition-all resize-none"
+                                    placeholder="Paste a list of Artist - Song..."
+                                    rows={8}
+                                    className="w-full px-6 py-4 bg-neutral-900 border border-neutral-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-green-500"
                                 />
-                                <button
-                                    type="submit"
-                                    disabled={loading || !textInput.trim()}
-                                    className="w-full py-3 bg-green-500 hover:bg-green-400 text-black font-semibold rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {loading ? "Processing..." : "Save Text List"}
-                                </button>
-                            </div>
-                        )}
-                    </form>
-                    {error && (
-                        <div className="mt-4 p-4 bg-red-900/50 border border-red-800 text-red-200 rounded-xl text-sm">
-                            {error}
-                        </div>
-                    )}
-                </div>
-
-                {/* Playlist Display */}
-                {playlist && (
-                    <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                        <div className="w-full bg-neutral-900/50 border border-neutral-800 rounded-3xl p-6 md:p-10 flex flex-col md:flex-row gap-8 backdrop-blur-sm">
-                            {playlist.type === 'spotify' ? (
-                                <>
-                                    <div className="relative w-60 h-60 md:w-80 md:h-80 flex-shrink-0 mx-auto md:mx-0 shadow-2xl shadow-green-500/10">
-                                        {playlist.images?.[0]?.url ? (
-                                            <Image
-                                                src={playlist.images[0].url}
-                                                alt={playlist.name}
-                                                fill
-                                                className="object-cover rounded-2xl"
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full bg-neutral-800 rounded-2xl flex items-center justify-center text-neutral-600">
-                                                No Cover
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="flex flex-col justify-center space-y-4 text-center md:text-left">
-                                        <div>
-                                            <h3 className="text-4xl md:text-5xl font-bold tracking-tight mb-2">{playlist.name}</h3>
-                                            <p className="text-neutral-400 text-lg line-clamp-3">{playlist.description}</p>
-                                        </div>
-
-                                        <div className="flex flex-wrap gap-4 justify-center md:justify-start text-sm font-medium text-neutral-300">
-                                            <span className="bg-neutral-800 px-3 py-1 rounded-full">By {playlist.owner.display_name}</span>
-                                            <span className="bg-neutral-800 px-3 py-1 rounded-full">{playlist.tracks?.total || 0} Tracks</span>
-                                        </div>
-
-                                        <div className="pt-4">
-                                            <a
-                                                href={playlist.external_urls.spotify}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="inline-flex items-center gap-2 text-green-400 hover:text-green-300 transition-colors font-semibold"
-                                            >
-                                                Open in Spotify
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                                            </a>
-                                        </div>
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="w-full flex flex-col gap-6">
-                                    <div className="flex justify-between items-start">
-                                        <h3 className="text-2xl font-bold text-neutral-200">Saved Text List</h3>
-
-                                        {/* Transfer Button - Only show if not already analyzed or if we want to allow re-analysis */}
-                                        <button
-                                            onClick={handleAnalyzeIdentity}
-                                            disabled={analyzing}
-                                            className="px-5 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-900/20 flex items-center gap-2"
-                                        >
-                                            {analyzing ? (
-                                                <>
-                                                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                    </svg>
-                                                    Analyzing...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    Transfer My Identity
-                                                    <span className="text-xs opacity-80 font-normal ml-1">(AI Analysis)</span>
-                                                </>
-                                            )}
-                                        </button>
-                                    </div>
-
-                                    <div className="w-full bg-neutral-950 rounded-xl p-6 border border-neutral-800 font-mono text-sm text-neutral-300 whitespace-pre-wrap leading-relaxed max-h-[300px] overflow-y-auto">
-                                        {playlist.content}
-                                    </div>
-                                </div>
                             )}
-                        </div>
-
-                        {/* Analysis Result Display */}
-                        {playlist.musicIdentity && (
-                            <div className="w-full bg-gradient-to-b from-indigo-900/20 to-neutral-900/50 border border-indigo-500/30 rounded-3xl p-8 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-700">
-                                <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-300 to-indigo-300 bg-clip-text text-transparent mb-6 flex items-center gap-3">
-                                    <span className="text-3xl">✨</span> Your Musical Identity
-                                </h3>
-                                <div className="prose prose-invert max-w-none">
-                                    {(() => {
-                                        try {
-                                            const categories: (string | { title: string, description: string })[] = JSON.parse(playlist.musicIdentity)
-                                            return (
-                                                <div className="space-y-4">
-                                                    <p className="text-lg text-neutral-300 font-medium">
-                                                        The music you love can be summarized in <span className="text-indigo-400 font-bold">{categories.length}</span> categories:
-                                                    </p>
-                                                    <div className="flex flex-col gap-3 mt-4">
-                                                        {categories.map((category, index) => {
-                                                            const isObject = typeof category === 'object' && category !== null
-                                                            const title = isObject ? category.title : `Category ${index + 1}`
-                                                            const description = isObject ? category.description : category
-
-                                                            return (
-                                                                <div key={index} className="bg-white/5 border border-white/10 rounded-xl p-4 flex gap-4 items-start hover:bg-white/10 transition-colors">
-                                                                    <span className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-indigo-500/20 text-indigo-300 rounded-full text-sm font-bold border border-indigo-500/30">
-                                                                        {index + 1}
-                                                                    </span>
-                                                                    <div className="text-neutral-200 leading-relaxed w-full">
-                                                                        <span className="font-semibold text-indigo-200 block mb-1 text-lg">{title}</span>
-                                                                        <span className="opacity-90">{description}</span>
-                                                                    </div>
-                                                                </div>
-                                                            )
-                                                        })}
-                                                    </div>
-                                                </div>
-                                            )
-                                        } catch (_) {
-                                            // Fallback for flat strings (legacy data or errors)
-                                            return (
-                                                <div className="whitespace-pre-wrap text-neutral-200 leading-relaxed text-lg">
-                                                    {playlist.musicIdentity}
-                                                </div>
-                                            )
-                                        }
-                                    })()}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Sing Button Section */}
-                        {playlist.musicIdentity && (
-                            <div className="w-full flex flex-col items-center mt-8 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
-                                {!audioUrl && (
-                                    <button
-                                        onClick={handleSing}
-                                        disabled={isSinging}
-                                        className="px-8 py-4 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-400 hover:to-rose-400 text-white font-bold text-lg rounded-full shadow-lg shadow-pink-500/20 transform hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3"
-                                    >
-                                        {isSinging ? (
-                                            <>
-                                                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                </svg>
-                                                Composing...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <span>🎤</span> Please Sing, MyMuMe
-                                            </>
-                                        )}
-                                    </button>
-                                )}
-
-                                {audioUrl && (
-                                    <div className="w-full max-w-md bg-neutral-900/50 border border-pink-500/30 rounded-2xl p-6 backdrop-blur-sm animate-in zoom-in duration-500">
-                                        <h4 className="text-center text-pink-300 font-semibold mb-4">Now Playing: MyMuMe Original</h4>
-                                        <audio controls autoPlay className="w-full">
-                                            <source src={audioUrl} type="audio/mpeg" />
-                                            Your browser does not support the audio element.
-                                        </audio>
-                                        <button
-                                            onClick={() => setAudioUrl("")}
-                                            className="text-xs text-neutral-500 hover:text-white mt-4 mx-auto block transition-colors"
-                                        >
-                                            Generate Another
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Prompt Display */}
-                        {livePrompt && (
-                            <div className="w-full bg-neutral-900/30 border border-neutral-800 rounded-2xl p-6 animate-in fade-in slide-in-from-bottom-2 duration-700 delay-100 mt-8">
-                                <h4 className="text-sm font-semibold text-neutral-500 uppercase tracking-wider mb-4">
-                                    Generated Prompt <span className="text-xs normal-case opacity-50 ml-2">(Live Preview)</span>
-                                </h4>
-                                <div className="font-mono text-xs text-neutral-400 whitespace-pre-wrap bg-black/50 p-4 rounded-xl border border-neutral-800/50 leading-relaxed overflow-x-auto">
-                                    {livePrompt}
-                                </div>
-                            </div>
-                        )}
+                            <button
+                                type="submit"
+                                disabled={loading || (activeTab === 'url' ? !url : !textInput)}
+                                className="w-full py-4 bg-white text-black font-bold rounded-2xl hover:bg-neutral-200 transition-colors disabled:opacity-50"
+                            >
+                                {loading ? "Saving..." : "Save Playlist"}
+                            </button>
+                        </form>
                     </div>
                 )}
 
+                {/* Step 4: Analyze */}
+                {currentStep === 4 && (
+                    <div className="text-center space-y-8 animate-in fade-in zoom-in duration-500">
+                        <div className="w-24 h-24 bg-gradient-to-tr from-purple-500 to-indigo-500 rounded-full mx-auto flex items-center justify-center shadow-lg shadow-purple-500/30 animate-pulse">
+                            <span className="text-4xl">🔮</span>
+                        </div>
+                        <div>
+                            <h2 className="text-3xl font-bold mb-2">Ready to discover your identity?</h2>
+                            <p className="text-neutral-400">We've got your playlist. Now let's see what it says about you.</p>
+                        </div>
+
+                        <button
+                            onClick={handleAnalyze}
+                            disabled={analyzing}
+                            className="w-full py-5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xl rounded-2xl shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02]"
+                        >
+                            {analyzing ? "Analyzing Magic..." : "Analyze My Music Identity"}
+                        </button>
+                    </div>
+                )}
+
+                {/* Step 5: Success & Feed */}
+                {currentStep === 5 && (
+                    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                        {/* Success Banner */}
+                        <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 border border-green-500/20 rounded-3xl p-8 text-center backdrop-blur-sm">
+                            <div className="text-5xl mb-4">🎉</div>
+                            <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">Identity Established!</h2>
+                            <p className="text-neutral-300 mb-6">Welcome to the collective, <span className="font-bold text-white">{nickname}</span>.</p>
+
+                            <div className="mt-6 bg-black/30 rounded-xl p-6 text-left border border-white/5">
+                                <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-4">Your Analysis</h3>
+                                <div className="prose prose-invert prose-sm max-w-none text-neutral-300 whitespace-pre-wrap">
+                                    {playlist?.musicIdentity && (
+                                        (() => {
+                                            try {
+                                                const categories = JSON.parse(playlist.musicIdentity)
+                                                return Array.isArray(categories) ? (
+                                                    <div className="space-y-2">
+                                                        {categories.map((c: any, i: number) => (
+                                                            <div key={i} className="flex gap-2">
+                                                                <span className="text-indigo-400 font-bold">{i + 1}.</span>
+                                                                <span>{typeof c === 'string' ? c : c.title}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ) : playlist.musicIdentity
+                                            } catch { return playlist.musicIdentity }
+                                        })()
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Public Feed */}
+                        <div className="space-y-6">
+                            <h3 className="text-xl font-bold flex items-center gap-2">
+                                <span className="text-2xl">🌍</span> Other MyMuMEs
+                            </h3>
+                            <div className="grid gap-4">
+                                {publicProfiles.map((profile) => (
+                                    <div key={profile.id} className="bg-neutral-900/50 border border-neutral-800 p-4 rounded-xl flex items-center gap-4 hover:border-neutral-700 transition-colors">
+                                        {profile.image ? (
+                                            <Image src={profile.image} alt={profile.nickname || "User"} width={48} height={48} className="rounded-full" />
+                                        ) : (
+                                            <div className="w-12 h-12 bg-neutral-800 rounded-full flex items-center justify-center text-xl">👤</div>
+                                        )}
+                                        <div>
+                                            <div className="font-bold text-white">{profile.nickname || "Anonymous"}</div>
+                                            <div className="text-xs text-neutral-500 bg-neutral-800 px-2 py-0.5 rounded-full inline-block mt-1">
+                                                Voice: {profile.voiceType || "Any"}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        {/* Restart Button */}
+                        <div className="text-center pt-8 border-t border-neutral-800">
+                            <p className="text-neutral-500 mb-4">Want to try a different persona?</p>
+                            <button
+                                onClick={() => {
+                                    setCurrentStep(1)
+                                    setNickname("")
+                                    setVoiceType(null)
+                                    setPlaylist(null)
+                                    setUrl("")
+                                    setTextInput("")
+                                }}
+                                className="px-6 py-3 border border-neutral-700 text-neutral-300 rounded-full hover:bg-neutral-800 hover:text-white transition-colors text-sm"
+                            >
+                                ↺ Start Over
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {error && <div className="mt-8 p-4 bg-red-900/20 text-red-300 rounded-xl text-center border border-red-900/50">{error}</div>}
             </main>
         </div>
     )
