@@ -61,7 +61,7 @@ export async function POST(req: Request) {
 
     try {
         const playlistData = await getPlaylist(playlistId)
-        console.log(`[API] Fetched playlist data`)
+        console.log(`[API] Fetched playlist data`, playlistData)
 
         // Convert tracks to text list
         let textList = ""
