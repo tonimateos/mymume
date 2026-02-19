@@ -498,6 +498,11 @@ export default function Dashboard() {
                                 {analyzing ? "Analyzing Magic..." : "Analyze My Music Identity"}
                             </button>
                         </div>
+                        {analyzing && (
+                            <p className="text-sm text-neutral-400 animate-pulse mt-4">
+                                Please be patient, generating your unique music identity can take a moment...
+                            </p>
+                        )}
                     </div>
                 )}
 
