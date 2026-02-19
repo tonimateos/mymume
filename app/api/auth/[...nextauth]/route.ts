@@ -15,6 +15,7 @@ export const authOptions: NextAuthOptions = {
         SpotifyProvider({
             clientId: process.env.SPOTIFY_CLIENT_ID ?? "",
             clientSecret: process.env.SPOTIFY_CLIENT_SECRET ?? "",
+            allowDangerousEmailAccountLinking: true,
             authorization: {
                 params: {
                     scope: "playlist-read-private playlist-read-collaborative user-read-email",
