@@ -56,8 +56,8 @@ export default function Dashboard() {
     const [url, setUrl] = useState("")
     const [textInput, setTextInput] = useState("")
     const [playlist, setPlaylist] = useState<PlaylistData | null>(null)
-    const [showSpotifyLogin, setShowSpotifyLogin] = useState(false)
     const [isSpotifyConnected, setIsSpotifyConnected] = useState(false)
+    const [showSpotifyPopover, setShowSpotifyPopover] = useState(false)
 
     // General State
     const [loading, setLoading] = useState(false)
@@ -81,8 +81,7 @@ export default function Dashboard() {
                 if (data.nickname) setNickname(data.nickname)
                 if (data.voiceType) setVoiceType(data.voiceType)
                 setIsSpotifyConnected(!!data.isSpotifyConnected)
-                // Always show spotify login/disconnect area if we are in URL mode
-                if (data.isSpotifyConnected) setShowSpotifyLogin(true)
+                if (data.isSpotifyConnected) setIsSpotifyConnected(true)
 
                 if (data.type === 'text' || data.type === 'spotify') {
                     setPlaylist(data)
@@ -169,7 +168,8 @@ export default function Dashboard() {
 
             if (!res.ok) {
                 if (data.code === 'SPOTIFY_AUTH_REQUIRED') {
-                    setShowSpotifyLogin(true)
+                    setIsSpotifyConnected(false)
+                    setError("Spotify connection expired. Please reconnect.")
                     return
                 }
                 throw new Error(data.error || "Failed to save playlist")
@@ -254,7 +254,57 @@ export default function Dashboard() {
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
                     MyMuMe
                 </h1>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 relative">
+                    {/* Spotify Icon in Header */}
+                    <div className="relative">
+                        <button
+                            onClick={() => setShowSpotifyPopover(!showSpotifyPopover)}
+                            className="p-2 rounded-full hover:bg-neutral-800 transition-colors"
+                        >
+                            <span className={`text-2xl filter ${isSpotifyConnected ? 'grayscale-0' : 'grayscale opacity-50'}`}>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill={isSpotifyConnected ? "#1DB954" : "currentColor"} xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 14.82 1.08.66.3 1.08.96.6 1.56-.239.539-.899.899-1.38.899z" />
+                                </svg>
+                            </span>
+                        </button>
+
+                        {/* Popover */}
+                        {showSpotifyPopover && (
+                            <div className="absolute top-full right-0 mt-2 w-72 bg-neutral-900 border border-neutral-800 rounded-xl shadow-xl p-4 z-50 animate-in fade-in zoom-in duration-200">
+                                <h3 className="font-bold text-white mb-2 text-center">
+                                    {isSpotifyConnected ? "Spotify Connected" : "Not Connected"}
+                                </h3>
+                                <p className="text-xs text-neutral-400 mb-4 text-center">
+                                    {isSpotifyConnected
+                                        ? "You are now connected to Spotify."
+                                        : "You are not connected to Spotify."}
+                                </p>
+
+                                {isSpotifyConnected ? (
+                                    <button
+                                        onClick={() => {
+                                            handleUnlinkSpotify();
+                                            setShowSpotifyPopover(false);
+                                        }}
+                                        className="w-full py-2 bg-red-900/30 text-red-300 hover:bg-red-900/50 rounded-lg text-sm font-semibold transition-colors"
+                                    >
+                                        Disconnect
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={() => {
+                                            signIn('spotify', { callbackUrl: window.location.href });
+                                            setShowSpotifyPopover(false);
+                                        }}
+                                        className="w-full py-2 bg-[#1DB954] text-black hover:bg-[#1ed760] rounded-lg text-sm font-bold transition-colors"
+                                    >
+                                        Connect
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
                     <span className="text-neutral-400 text-sm hidden md:inline">Step {currentStep} of 5</span>
                     {session?.user?.image && (
                         <Image src={session.user.image} alt="Profile" width={32} height={32} className="rounded-full border border-neutral-700" />
@@ -320,9 +370,11 @@ export default function Dashboard() {
                         <div className="text-center">
                             <h2 className="text-3xl font-bold mb-2">Import your music</h2>
                             <p className="text-neutral-400">Provide a playlist to shape your identity.</p>
-                            <p className="text-xs text-neutral-500 text-center">
-                                Tip: Use <a href="https://www.tunemymusic.com/" target="_blank" className="underline hover:text-white">TuneMyMusic</a> to <b>Export your Playlist to a File</b>, then copy and paste here.
-                            </p>
+                            {activeTab === "text" && (
+                                <p className="text-xs text-neutral-500 text-center mt-2">
+                                    Tip: Use <a href="https://www.tunemymusic.com/" target="_blank" className="underline hover:text-white">TuneMyMusic</a> to <b>Export your Playlist to a File</b>, then copy and paste here.
+                                </p>
+                            )}
                         </div>
 
                         <div className="flex justify-center gap-4 mb-6">
@@ -332,13 +384,32 @@ export default function Dashboard() {
 
                         <form onSubmit={saveStep3} className="space-y-4">
                             {activeTab === "url" ? (
-                                <input
-                                    type="text"
-                                    value={url}
-                                    onChange={(e) => setUrl(e.target.value)}
-                                    placeholder="https://open.spotify.com/playlist/..."
-                                    className="w-full px-6 py-4 bg-neutral-900 border border-neutral-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-green-500"
-                                />
+                                <div className="space-y-4">
+                                    <p className="text-sm text-neutral-400 text-center mb-4">
+                                        Enter a playlist you own or collaborate with in Spotify.
+                                    </p>
+
+                                    {!isSpotifyConnected ? (
+                                        <div className="text-center p-8 bg-neutral-900/50 border border-neutral-800 rounded-2xl">
+                                            <p className="mb-4 text-neutral-300">You need to connect Spotify to import by URL.</p>
+                                            <button
+                                                type="button"
+                                                onClick={() => signIn('spotify', { callbackUrl: window.location.href })}
+                                                className="px-8 py-3 bg-[#1DB954] hover:bg-[#1ed760] text-black font-bold rounded-full transition-all transform hover:scale-[1.02] shadow-lg flex items-center justify-center gap-2 mx-auto"
+                                            >
+                                                <span className="text-xl">🚀</span> Connect with Spotify
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <input
+                                            type="text"
+                                            value={url}
+                                            onChange={(e) => setUrl(e.target.value)}
+                                            placeholder="https://open.spotify.com/playlist/..."
+                                            className="w-full px-6 py-4 bg-neutral-900 border border-neutral-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                                        />
+                                    )}
+                                </div>
                             ) : (
                                 <div className="space-y-2">
                                     <textarea
@@ -350,45 +421,18 @@ export default function Dashboard() {
                                     />
                                 </div>
                             )}
-                            <button
-                                type="submit"
-                                disabled={loading || (activeTab === 'url' ? !url : !textInput)}
-                                className="w-full py-4 bg-white text-black font-bold rounded-2xl hover:bg-neutral-200 transition-colors disabled:opacity-50"
-                            >
-                                {loading ? "Saving..." : "Review Playlist"}
-                            </button>
+
+                            {(activeTab === 'text' || (activeTab === 'url' && isSpotifyConnected)) && (
+                                <button
+                                    type="submit"
+                                    disabled={loading || (activeTab === 'url' ? !url : !textInput)}
+                                    className="w-full py-4 bg-white text-black font-bold rounded-2xl hover:bg-neutral-200 transition-colors disabled:opacity-50"
+                                >
+                                    {loading ? "Saving..." : "Review Playlist"}
+                                </button>
+                            )}
                         </form>
 
-                        {showSpotifyLogin && (
-                            <div className="mt-6 p-6 bg-green-900/20 text-green-200 rounded-2xl text-center border border-green-500/20 animate-in fade-in zoom-in duration-300">
-                                <h3 className="font-bold text-lg mb-2">
-                                    {isSpotifyConnected ? "✅ Spotify Connected" : "🔒 Access Required"}
-                                </h3>
-                                <p className="mb-6 text-sm text-green-100/70">
-                                    {isSpotifyConnected
-                                        ? "Your Spotify account is linked. You can import your playlists."
-                                        : "To fetch this playlist, we need permission to read your Spotify data."}
-                                </p>
-
-                                {isSpotifyConnected ? (
-                                    <button
-                                        type="button"
-                                        onClick={handleUnlinkSpotify}
-                                        className="w-full py-4 bg-red-600/20 hover:bg-red-600/40 text-red-200 font-bold rounded-2xl transition-all transform hover:scale-[1.02] border border-red-500/30 flex items-center justify-center gap-3"
-                                    >
-                                        <span className="text-xl">🚫</span> Disconnect Spotify
-                                    </button>
-                                ) : (
-                                    <button
-                                        type="button"
-                                        onClick={() => signIn('spotify', { callbackUrl: window.location.href })}
-                                        className="w-full py-4 bg-[#1DB954] hover:bg-[#1ed760] text-black font-bold rounded-2xl transition-all transform hover:scale-[1.02] shadow-lg flex items-center justify-center gap-3"
-                                    >
-                                        <span className="text-xl">🚀</span> Connect with Spotify
-                                    </button>
-                                )}
-                            </div>
-                        )}
                         {error && (
                             <div className="mt-4 p-4 bg-red-900/20 text-red-300 rounded-xl text-center border border-red-900/50">
                                 <p className="font-bold mb-1">Import Failed</p>
