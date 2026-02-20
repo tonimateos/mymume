@@ -524,6 +524,12 @@ export default function Dashboard() {
                 {/* Step 6: Musical Me Transfer */}
                 {currentStep === 6 && (
                     <div className="space-y-12 animate-in fade-in zoom-in duration-700 text-center">
+                        <div className="space-y-4">
+                            <h2 className="text-4xl font-black bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
+                                Identity Transferred!
+                            </h2>
+                            <p className="text-xl text-neutral-400">Your Musical Me is now singing your soul...</p>
+                        </div>
                         <div className="relative inline-block">
                             {/* The Beast */}
                             <div className="text-9xl animate-bounce-slow relative inline-block filter drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]">
@@ -536,20 +542,10 @@ export default function Dashboard() {
                             <div className="absolute -inset-4 border-4 border-dashed border-green-500/30 rounded-full animate-spin-slow"></div>
                         </div>
 
-                        <div className="space-y-4">
-                            <h2 className="text-4xl font-black bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
-                                Identity Transferred!
-                            </h2>
-                            <p className="text-xl text-neutral-400">Your Musical Me is now singing your soul...</p>
-                        </div>
+
 
                         <div className="bg-neutral-900/50 border border-neutral-800 rounded-3xl p-8 backdrop-blur-md relative overflow-hidden">
                             <div className="flex flex-col items-center gap-6 relative z-10">
-                                <div className="text-sm font-bold text-neutral-500 uppercase tracking-widest">Now Vocalizing</div>
-                                <div className="text-lg font-mono text-green-400 truncate max-w-full">
-                                    {selectedAudioUrl.split('/').pop()}
-                                </div>
-
                                 <button
                                     onClick={() => setIsMuted(!isMuted)}
                                     className="p-6 bg-white/5 hover:bg-white/10 rounded-full border border-white/10 transition-all transform hover:scale-110"
