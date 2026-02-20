@@ -467,29 +467,6 @@ export default function Dashboard() {
                             </div>
                         </div>
 
-                        {/* Public Feed */}
-                        <div className="space-y-6">
-                            <h3 className="text-xl font-bold flex items-center gap-2">
-                                <span className="text-2xl">🌍</span> Other MyMuMEs
-                            </h3>
-                            <div className="grid gap-4">
-                                {publicProfiles.map((profile) => (
-                                    <div key={profile.id} className="bg-neutral-900/50 border border-neutral-800 p-4 rounded-xl flex items-center gap-4 hover:border-neutral-700 transition-colors">
-                                        {profile.image ? (
-                                            <Image src={profile.image} alt={profile.nickname || "User"} width={48} height={48} className="rounded-full" />
-                                        ) : (
-                                            <div className="w-12 h-12 bg-neutral-800 rounded-full flex items-center justify-center text-xl">👤</div>
-                                        )}
-                                        <div>
-                                            <div className="font-bold text-white">{profile.nickname || "Anonymous"}</div>
-                                            <div className="text-xs text-neutral-500 bg-neutral-800 px-2 py-0.5 rounded-full inline-block mt-1">
-                                                Voice: {profile.voiceType || "Any"}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
 
                         {/* Transfer Identity Button */}
                         <div className="flex justify-center mt-12 pb-8 border-t border-neutral-800 pt-12">
@@ -578,6 +555,30 @@ export default function Dashboard() {
                                             animationDelay: `${i * 0.05}s`
                                         }}
                                     ></div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Public Feed */}
+                        <div className="space-y-6 max-w-2xl mx-auto text-left py-12 border-t border-neutral-800">
+                            <h3 className="text-xl font-bold flex items-center gap-2 mb-6">
+                                <span className="text-2xl">🌍</span> Other MyMuMEs
+                            </h3>
+                            <div className="grid gap-4 md:grid-cols-2">
+                                {publicProfiles.map((profile) => (
+                                    <div key={profile.id} className="bg-neutral-900/50 border border-neutral-800 p-4 rounded-xl flex items-center gap-4 hover:border-neutral-700 transition-colors">
+                                        {profile.image ? (
+                                            <Image src={profile.image} alt={profile.nickname || "User"} width={48} height={48} className="rounded-full" />
+                                        ) : (
+                                            <div className="w-12 h-12 bg-neutral-800 rounded-full flex items-center justify-center text-xl">👤</div>
+                                        )}
+                                        <div>
+                                            <div className="font-bold text-white">{profile.nickname || "Anonymous"}</div>
+                                            <div className="text-xs text-neutral-500 bg-neutral-800 px-2 py-0.5 rounded-full inline-block mt-1">
+                                                Voice: {profile.voiceType || "Any"}
+                                            </div>
+                                        </div>
+                                    </div>
                                 ))}
                             </div>
                         </div>
