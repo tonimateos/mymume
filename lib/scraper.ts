@@ -1,3 +1,8 @@
+// Force Playwright to look in node_modules/playwright-core/.local-browsers on Digital Ocean
+if (process.env.NODE_ENV === 'production' && !process.env.PLAYWRIGHT_BROWSERS_PATH) {
+    process.env.PLAYWRIGHT_BROWSERS_PATH = '0';
+}
+
 import { chromium } from 'playwright';
 
 export interface ScrapedTrack {
