@@ -45,7 +45,7 @@ export default function Dashboard() {
     const searchParams = useSearchParams()
 
     // Stepper State
-    const [currentStep, setCurrentStep] = useState(1)
+    const [currentStep, setCurrentStep] = useState<number>(1)
 
     // Step 1: Nickname State
     const [nickname, setNickname] = useState("")
@@ -65,6 +65,10 @@ export default function Dashboard() {
     const [audioUrl, setAudioUrl] = useState("")
     const [error, setError] = useState("")
     const [publicProfiles, setPublicProfiles] = useState<UserProfile[]>([])
+
+    // Step 6: Transfer Identity State
+    const [isMuted, setIsMuted] = useState(false)
+    const [selectedAudioUrl, setSelectedAudioUrl] = useState("")
 
     // Load initial data
     useEffect(() => {
@@ -214,6 +218,26 @@ export default function Dashboard() {
         }
     }
 
+    const startTransfer = () => {
+        const maleSongs = [
+            "/mocks/male/6320c514-7b91-ba9b-48dd-d8c346f7c56b.mp3",
+            "/mocks/male/ecdd1f54-9aab-35a0-a8d0-fb3a82ba3dc0.mp3"
+        ]
+        const femaleSongs = [
+            "/mocks/female/3d962127-cc81-2640-b400-6d57595458d8.mp3",
+            "/mocks/female/88ac98e2-df53-1979-c6c4-1fd4bc8f8813.mp3"
+        ]
+
+        let pool = []
+        if (voiceType === "MALE") pool = maleSongs
+        else if (voiceType === "FEMALE") pool = femaleSongs
+        else pool = [...maleSongs, ...femaleSongs]
+
+        const randomSong = pool[Math.floor(Math.random() * pool.length)]
+        setSelectedAudioUrl(randomSong)
+        setCurrentStep(6)
+    }
+
 
     // Fetch profiles if we start at step 5
     useEffect(() => {
@@ -228,7 +252,7 @@ export default function Dashboard() {
                     MyMuMe
                 </h1>
                 <div className="flex items-center gap-4">
-                    <span className="text-neutral-400 text-sm hidden md:inline">Step {currentStep} of 5</span>
+                    <span className="text-neutral-400 text-sm hidden md:inline">Step {currentStep} of 6</span>
                     {session?.user?.image && (
                         <Image src={session.user.image} alt="Profile" width={32} height={32} className="rounded-full border border-neutral-700" />
                     )}
@@ -466,6 +490,17 @@ export default function Dashboard() {
                                 ))}
                             </div>
                         </div>
+
+                        {/* Transfer Identity Button */}
+                        <div className="flex justify-center mt-12 pb-8 border-t border-neutral-800 pt-12">
+                            <button
+                                onClick={startTransfer}
+                                className="px-10 py-5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-black text-2xl rounded-3xl shadow-2xl shadow-green-500/20 transform hover:scale-105 transition-all animate-bounce"
+                            >
+                                🚀 Transfer Identity to Your Musical Me
+                            </button>
+                        </div>
+
                         {/* Restart Button */}
                         <div className="text-center pt-8 border-t border-neutral-800">
                             <p className="text-neutral-500 mb-4">Want to try a different persona?</p>
@@ -486,7 +521,102 @@ export default function Dashboard() {
                     </div>
                 )}
 
-                {error && currentStep !== 3 && <div className="mt-8 p-4 bg-red-900/20 text-red-300 rounded-xl text-center border border-red-900/50">{error}</div>}
+                {/* Step 6: Musical Me Transfer */}
+                {currentStep === 6 && (
+                    <div className="space-y-12 animate-in fade-in zoom-in duration-700 text-center">
+                        <div className="relative inline-block">
+                            {/* The Beast */}
+                            <div className="text-9xl animate-bounce-slow relative inline-block filter drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+                                👾
+                                <div className="absolute top-0 right-0 animate-pulse text-4xl">🎵</div>
+                                <div className="absolute bottom-0 left-0 animate-pulse delay-700 text-4xl">🎶</div>
+                            </div>
+
+                            {/* Singing Animation Overlay */}
+                            <div className="absolute -inset-4 border-4 border-dashed border-green-500/30 rounded-full animate-spin-slow"></div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <h2 className="text-4xl font-black bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
+                                Identity Transferred!
+                            </h2>
+                            <p className="text-xl text-neutral-400">Your Musical Me is now singing your soul...</p>
+                        </div>
+
+                        <div className="bg-neutral-900/50 border border-neutral-800 rounded-3xl p-8 backdrop-blur-md relative overflow-hidden">
+                            <div className="flex flex-col items-center gap-6 relative z-10">
+                                <div className="text-sm font-bold text-neutral-500 uppercase tracking-widest">Now Vocalizing</div>
+                                <div className="text-lg font-mono text-green-400 truncate max-w-full">
+                                    {selectedAudioUrl.split('/').pop()}
+                                </div>
+
+                                <button
+                                    onClick={() => setIsMuted(!isMuted)}
+                                    className="p-6 bg-white/5 hover:bg-white/10 rounded-full border border-white/10 transition-all transform hover:scale-110"
+                                >
+                                    {isMuted ? (
+                                        <span className="text-4xl">🔇</span>
+                                    ) : (
+                                        <span className="text-4xl">🔊</span>
+                                    )}
+                                </button>
+
+                                <audio
+                                    src={selectedAudioUrl}
+                                    autoPlay
+                                    loop
+                                    muted={isMuted}
+                                    style={{ display: 'none' }}
+                                />
+                            </div>
+
+                            {/* Visualizer bars */}
+                            <div className="absolute bottom-0 left-0 right-0 h-24 flex items-end justify-center gap-1 px-4 opacity-20 pointer-events-none">
+                                {[...Array(20)].map((_, i) => (
+                                    <div
+                                        key={i}
+                                        className="w-full bg-green-500 rounded-t-sm"
+                                        style={{
+                                            height: `${Math.random() * 100}%`,
+                                            animation: `visualizer 1s ease-in-out infinite alternate`,
+                                            animationDelay: `${i * 0.05}s`
+                                        }}
+                                    ></div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={() => setCurrentStep(5)}
+                            className="text-neutral-500 hover:text-white underline transition-colors"
+                        >
+                            Back to Profile
+                        </button>
+
+                        <style jsx>{`
+                            @keyframes visualizer {
+                                from { height: 10%; }
+                                to { height: 100%; }
+                            }
+                            .animate-bounce-slow {
+                                animation: bounce 2s infinite;
+                            }
+                            .animate-spin-slow {
+                                animation: spin 10s linear infinite;
+                            }
+                            @keyframes spin {
+                                from { transform: rotate(0deg); }
+                                to { transform: rotate(360deg); }
+                            }
+                        `}</style>
+                    </div>
+                )}
+
+                {error && currentStep !== 3 && (
+                    <div className="mt-8 p-4 bg-red-900/20 text-red-300 rounded-xl text-center border border-red-900/50">
+                        {error}
+                    </div>
+                )}
             </main>
         </div>
     )
