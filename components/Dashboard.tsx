@@ -270,14 +270,13 @@ export default function Dashboard() {
                 {currentStep === 1 && (
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="text-center">
-                            <h2 className="text-3xl font-bold mb-2">What should we call you?</h2>
-                            <p className="text-neutral-400">Choose a nickname for your MyMuMe identity.</p>
+                            <h2 className="text-3xl font-bold mb-2">Name Your Musical Me</h2>
                         </div>
                         <input
                             type="text"
                             value={nickname}
                             onChange={(e) => setNickname(e.target.value)}
-                            placeholder="e.g. MelodyMaker"
+                            placeholder="e.g. Melody Maker"
                             className="w-full px-6 py-4 bg-neutral-900 border border-neutral-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-green-500 text-lg text-center"
                         />
                         <button
@@ -294,8 +293,7 @@ export default function Dashboard() {
                 {currentStep === 2 && (
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="text-center">
-                            <h2 className="text-3xl font-bold mb-2">Choose your voice</h2>
-                            <p className="text-neutral-400">Who should sing your life&apos;s soundtrack?</p>
+                            <h2 className="text-3xl font-bold mb-2">Choose a Voice for Your Musical Me</h2>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {[
