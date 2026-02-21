@@ -739,7 +739,7 @@ export default function Dashboard() {
                                                 onClick={() => setShowFullAnalysis(false)}
                                                 className="mt-8 w-full py-3 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-xl transition-colors text-xs font-bold"
                                             >
-                                                Collapse Analysis
+                                                Close Analysis
                                             </button>
                                         </div>
                                     </div>
