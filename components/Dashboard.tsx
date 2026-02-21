@@ -383,13 +383,8 @@ export default function Dashboard() {
                 {currentStep === 3 && (
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="text-center">
-                            <h2 className="text-3xl font-bold mb-2">Import your music</h2>
-                            <p className="text-neutral-400">Provide a playlist to shape your identity.</p>
-                            {activeTab === "text" && (
-                                <p className="text-xs text-neutral-500 text-center mt-2">
-                                    Tip: Use <a href="https://www.tunemymusic.com/" target="_blank" className="underline hover:text-white">TuneMyMusic</a> to <b>Export your Playlist to a File</b>, then copy and paste here.
-                                </p>
-                            )}
+                            <h2 className="text-3xl font-bold mb-2">Inject Your Music</h2>
+                            <p className="text-neutral-400">Provide a playlist that you love</p>
                         </div>
 
                         <div className="flex justify-center gap-4 mb-6">
@@ -412,7 +407,10 @@ export default function Dashboard() {
                                     />
                                 </div>
                             ) : (
-                                <div className="space-y-2">
+                                <div className="space-y-4">
+                                    <p className="text-sm text-neutral-400 text-center mb-4">
+                                        Tip: Use <a href="https://www.tunemymusic.com/" target="_blank" className="underline hover:text-white">TuneMyMusic</a> to <b>Export your Playlist to a File</b>, then copy and paste here.
+                                    </p>
                                     <textarea
                                         value={textInput}
                                         onChange={(e) => setTextInput(e.target.value)}
@@ -439,12 +437,12 @@ export default function Dashboard() {
                                 {activeTab === "url" && (
                                     <button
                                         onClick={() => {
-                                            setActiveTab("text");
-                                            setError("");
+                                            setActiveTab("text")
+                                            setError("")
                                         }}
-                                        className="text-xs mt-2 text-neutral-400 underline hover:text-white bg-transparent border-0 cursor-pointer"
+                                        className="mt-2 text-xs underline hover:text-white opacity-70"
                                     >
-                                        Try copying the song list manually
+                                        Try pasting text list instead
                                     </button>
                                 )}
                             </div>
@@ -453,119 +451,122 @@ export default function Dashboard() {
                 )}
 
                 {/* Step 4: Analyze (With Preview) */}
-                {currentStep === 4 && (
-                    <div className="text-center space-y-8 animate-in fade-in zoom-in duration-500">
-                        <div className="w-24 h-24 bg-gradient-to-tr from-purple-500 to-indigo-500 rounded-full mx-auto flex items-center justify-center shadow-lg shadow-purple-500/30">
-                            <span className="text-4xl">🔮</span>
-                        </div>
-                        <div>
-                            <h2 className="text-3xl font-bold mb-2">Ready to discover your identity?</h2>
-                            <p className="text-neutral-400">We found <strong>{playlist?.type === 'spotify' && playlist.tracks ? playlist.tracks.total : (playlist?.content?.split('\n').length || 0)}</strong> songs.</p>
-                        </div>
+                {
+                    currentStep === 4 && (
+                        <div className="text-center space-y-8 animate-in fade-in zoom-in duration-500">
+                            <div className="w-24 h-24 bg-gradient-to-tr from-purple-500 to-indigo-500 rounded-full mx-auto flex items-center justify-center shadow-lg shadow-purple-500/30">
+                                <span className="text-4xl">🔮</span>
+                            </div>
+                            <div>
+                                <h2 className="text-3xl font-bold mb-2">Ready to discover your identity?</h2>
+                                <p className="text-neutral-400">We found <strong>{playlist?.type === 'spotify' && playlist.tracks ? playlist.tracks.total : (playlist?.content?.split('\n').length || 0)}</strong> songs.</p>
+                            </div>
 
-                        {/* Preview Box */}
-                        <div className="w-full max-h-60 overflow-y-auto bg-neutral-900/50 border border-neutral-800 rounded-xl p-4 text-left font-mono text-xs text-neutral-400 whitespace-pre-wrap">
-                            {playlist?.content || "No songs found."}
-                        </div>
+                            {/* Preview Box */}
+                            <div className="w-full max-h-60 overflow-y-auto bg-neutral-900/50 border border-neutral-800 rounded-xl p-4 text-left font-mono text-xs text-neutral-400 whitespace-pre-wrap">
+                                {playlist?.content || "No songs found."}
+                            </div>
 
-                        <div className="flex gap-3">
-                            <button
-                                onClick={() => setCurrentStep(3)}
-                                className="px-6 py-4 bg-neutral-800 hover:bg-neutral-700 text-white font-semibold rounded-2xl transition-colors"
-                            >
-                                Back
-                            </button>
-                            <button
-                                onClick={handleAnalyze}
-                                disabled={analyzing}
-                                className="flex-1 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xl rounded-2xl shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02]"
-                            >
-                                {analyzing ? "Analyzing Magic..." : "Analyze My Music Identity"}
-                            </button>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setCurrentStep(3)}
+                                    className="px-6 py-4 bg-neutral-800 hover:bg-neutral-700 text-white font-semibold rounded-2xl transition-colors"
+                                >
+                                    Back
+                                </button>
+                                <button
+                                    onClick={handleAnalyze}
+                                    disabled={analyzing}
+                                    className="flex-1 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xl rounded-2xl shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02]"
+                                >
+                                    {analyzing ? "Analyzing Magic..." : "Analyze My Music Identity"}
+                                </button>
+                            </div>
+                            {analyzing && (
+                                <p className="text-sm text-neutral-400 animate-pulse mt-4">
+                                    Please be patient, generating your unique music identity can take a moment...
+                                </p>
+                            )}
                         </div>
-                        {analyzing && (
-                            <p className="text-sm text-neutral-400 animate-pulse mt-4">
-                                Please be patient, generating your unique music identity can take a moment...
-                            </p>
-                        )}
-                    </div>
-                )}
+                    )
+                }
 
                 {/* Step 5: Success & Feed */}
-                {currentStep === 5 && (
-                    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
-                        {/* Success Banner */}
-                        <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 border border-green-500/20 rounded-3xl p-8 text-center backdrop-blur-sm">
-                            <div className="text-5xl mb-4">🎉</div>
-                            <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">Identity Established!</h2>
-                            <p className="text-neutral-300 mb-6">Welcome to the collective, <span className="font-bold text-white">{nickname}</span>.</p>
+                {
+                    currentStep === 5 && (
+                        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                            {/* Success Banner */}
+                            <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 border border-green-500/20 rounded-3xl p-8 text-center backdrop-blur-sm">
+                                <div className="text-5xl mb-4">🎉</div>
+                                <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">Identity Established!</h2>
+                                <p className="text-neutral-300 mb-6">Welcome to the collective, <span className="font-bold text-white">{nickname}</span>.</p>
 
-                            <div className="mt-6 bg-black/30 rounded-xl p-6 text-left border border-white/5">
-                                <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-4">Your Analysis</h3>
-                                <div className="prose prose-invert prose-sm max-w-none text-neutral-300">
-                                    {playlist?.musicIdentity && (
-                                        (() => {
-                                            try {
-                                                const categories = JSON.parse(playlist.musicIdentity)
-                                                return Array.isArray(categories) ? (
-                                                    <div className="space-y-6">
-                                                        {categories.map((c: { title?: string; description?: string } | string, i: number) => (
-                                                            <div key={i} className="bg-white/5 p-4 rounded-xl border border-white/5">
-                                                                <div className="flex items-center gap-3 mb-2">
-                                                                    <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-indigo-500/20 text-indigo-300 rounded-full text-xs font-bold border border-indigo-500/30">
-                                                                        {i + 1}
-                                                                    </span>
-                                                                    <span className="text-lg font-bold text-indigo-300">
-                                                                        {typeof c === 'string' ? c : c.title}
-                                                                    </span>
+                                <div className="mt-6 bg-black/30 rounded-xl p-6 text-left border border-white/5">
+                                    <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-4">Your Analysis</h3>
+                                    <div className="prose prose-invert prose-sm max-w-none text-neutral-300">
+                                        {playlist?.musicIdentity && (
+                                            (() => {
+                                                try {
+                                                    const categories = JSON.parse(playlist.musicIdentity)
+                                                    return Array.isArray(categories) ? (
+                                                        <div className="space-y-6">
+                                                            {categories.map((c: { title?: string; description?: string } | string, i: number) => (
+                                                                <div key={i} className="bg-white/5 p-4 rounded-xl border border-white/5">
+                                                                    <div className="flex items-center gap-3 mb-2">
+                                                                        <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-indigo-500/20 text-indigo-300 rounded-full text-xs font-bold border border-indigo-500/30">
+                                                                            {i + 1}
+                                                                        </span>
+                                                                        <span className="text-lg font-bold text-indigo-300">
+                                                                            {typeof c === 'string' ? c : c.title}
+                                                                        </span>
+                                                                    </div>
+                                                                    {typeof c === 'object' && c.description && (
+                                                                        <p className="text-neutral-300 leading-relaxed pl-9">
+                                                                            {c.description}
+                                                                        </p>
+                                                                    )}
                                                                 </div>
-                                                                {typeof c === 'object' && c.description && (
-                                                                    <p className="text-neutral-300 leading-relaxed pl-9">
-                                                                        {c.description}
-                                                                    </p>
-                                                                )}
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                ) : <div className="whitespace-pre-wrap">{playlist.musicIdentity}</div>
-                                            } catch { return <div className="whitespace-pre-wrap">{playlist.musicIdentity}</div> }
-                                        })()
-                                    )}
+                                                            ))}
+                                                        </div>
+                                                    ) : <div className="whitespace-pre-wrap">{playlist.musicIdentity}</div>
+                                                } catch { return <div className="whitespace-pre-wrap">{playlist.musicIdentity}</div> }
+                                            })()
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
 
-                        {/* Transfer Identity Button */}
-                        <div className="flex justify-center mt-12 pb-8 border-t border-neutral-800 pt-12">
-                            <button
-                                onClick={startTransfer}
-                                className="px-10 py-5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-black text-2xl rounded-3xl shadow-2xl shadow-green-500/20 transform hover:scale-105 transition-all animate-bounce"
-                            >
-                                🚀 Transfer Identity to Your Musical Me
-                            </button>
-                        </div>
+                            {/* Transfer Identity Button */}
+                            <div className="flex justify-center mt-12 pb-8 border-t border-neutral-800 pt-12">
+                                <button
+                                    onClick={startTransfer}
+                                    className="px-10 py-5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-black text-2xl rounded-3xl shadow-2xl shadow-green-500/20 transform hover:scale-105 transition-all animate-bounce"
+                                >
+                                    🚀 Transfer Identity to Your Musical Me
+                                </button>
+                            </div>
 
-                        {/* Restart Button */}
-                        <div className="text-center pt-8 border-t border-neutral-800">
-                            <p className="text-neutral-500 mb-4">Want to try a different persona?</p>
-                            <button
-                                onClick={() => {
-                                    setCurrentStep(1)
-                                    setNickname("")
-                                    setVoiceType(null)
-                                    setSelectedAttributes([])
-                                    setPlaylist(null)
-                                    setUrl("")
-                                    setTextInput("")
-                                }}
-                                className="px-6 py-3 border border-neutral-700 text-neutral-300 rounded-full hover:bg-neutral-800 hover:text-white transition-colors text-sm"
-                            >
-                                ↺ Start Over
-                            </button>
+                            {/* Restart Button */}
+                            <div className="text-center pt-8 border-t border-neutral-800">
+                                <p className="text-neutral-500 mb-4">Want to try a different persona?</p>
+                                <button
+                                    onClick={() => {
+                                        setCurrentStep(1)
+                                        setNickname("")
+                                        setVoiceType(null)
+                                        setSelectedAttributes([])
+                                        setPlaylist(null)
+                                        setUrl("")
+                                        setTextInput("")
+                                    }}
+                                    className="px-6 py-3 border border-neutral-700 text-neutral-300 rounded-full hover:bg-neutral-800 hover:text-white transition-colors text-sm"
+                                >
+                                    ↺ Start Over
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                )
+                    )
                 }
 
                 {/* Step 6: Musical Me Transfer */}
