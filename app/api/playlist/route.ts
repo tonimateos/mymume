@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json()
-    const { url, text, nickname, voiceType } = body
+    const { url, text, nickname, voiceType, musicalAttributes } = body
 
     // Handle generic profile update
     if (nickname || voiceType) {
@@ -27,7 +27,8 @@ export async function POST(req: Request) {
                 where: { id: session.user.id },
                 data: {
                     ...(nickname && { nickname }),
-                    ...(voiceType && { voiceType })
+                    ...(voiceType && { voiceType }),
+                    ...(musicalAttributes && { musicalAttributes })
                 }
             })
             return NextResponse.json({ success: true })
@@ -109,7 +110,8 @@ export async function GET() {
                 sourceType: true,
                 musicIdentity: true,
                 nickname: true,
-                voiceType: true
+                voiceType: true,
+                musicalAttributes: true
             },
         })
 
@@ -128,6 +130,7 @@ export async function GET() {
                 musicIdentity: user.musicIdentity,
                 nickname: user.nickname,
                 voiceType: user.voiceType,
+                musicalAttributes: user.musicalAttributes,
                 isSpotifyConnected: false
             })
         }

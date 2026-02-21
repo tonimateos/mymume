@@ -55,6 +55,7 @@ model User {
   // New Onboarding Fields
   nickname      String?
   voiceType     String? // "MALE" | "FEMALE" | "ANY"
+  musicalAttributes String? // JSON string or comma-separated list
   
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt

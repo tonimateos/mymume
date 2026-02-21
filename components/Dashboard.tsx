@@ -37,7 +37,16 @@ interface UserProfile {
     voiceType: string | null
     image: string | null
     musicIdentity: string | null
+    musicalAttributes: string | null
 }
+
+const MUSICAL_ATTRIBUTES = [
+    "Introverted", "Extroverted", "Sarcastic", "Athletic", "Creative",
+    "Bookworm", "Gamer", "Foodie", "Outdoorsy", "Tech-savvy",
+    "Chill", "Ambitious", "Practical", "Dreamer", "Organized",
+    "Spontaneous", "Reliable", "Friendly", "Competitive", "Artistic",
+    "Coffee Lover", "Traveler", "Animal Lover", "Movie Buff", "Night Owl"
+]
 
 export default function Dashboard() {
     const { data: session, status } = useSession()
@@ -49,8 +58,9 @@ export default function Dashboard() {
     // Step 1: Nickname State
     const [nickname, setNickname] = useState("")
 
-    // Step 2: Voice Type State
+    // Step 2: Voice & Attributes State
     const [voiceType, setVoiceType] = useState<"MALE" | "FEMALE" | "ANY" | null>(null)
+    const [selectedAttributes, setSelectedAttributes] = useState<string[]>([])
 
     // Step 3: Playlist State
     const [activeTab, setActiveTab] = useState<"text" | "url">("text")
@@ -76,6 +86,13 @@ export default function Dashboard() {
                 const data = await res.json()
                 if (data.nickname) setNickname(data.nickname)
                 if (data.voiceType) setVoiceType(data.voiceType)
+                if (data.musicalAttributes) {
+                    try {
+                        setSelectedAttributes(JSON.parse(data.musicalAttributes))
+                    } catch {
+                        setSelectedAttributes(data.musicalAttributes.split(','))
+                    }
+                }
 
                 if (data.type === 'text' || data.type === 'spotify') {
                     setPlaylist(data)
@@ -130,22 +147,39 @@ export default function Dashboard() {
         }
     }
 
-    const saveStep2 = async (selectedVoice: "MALE" | "FEMALE" | "ANY") => {
-        setVoiceType(selectedVoice)
+    const saveStep2 = async () => {
+        if (!voiceType) return setError("Please select a voice type")
+        if (selectedAttributes.length !== 4) return setError("Please select exactly 4 attributes")
+
         setLoading(true)
         setError("")
         try {
             await fetch("/api/playlist", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ voiceType: selectedVoice })
+                body: JSON.stringify({
+                    voiceType,
+                    musicalAttributes: JSON.stringify(selectedAttributes)
+                })
             })
             setCurrentStep(3)
         } catch {
-            setError("Failed to save voice type")
+            setError("Failed to save voice type and attributes")
         } finally {
             setLoading(false)
         }
+    }
+
+    const toggleAttribute = (attr: string) => {
+        setSelectedAttributes(prev => {
+            if (prev.includes(attr)) {
+                return prev.filter(a => a !== attr)
+            }
+            if (prev.length < 4) {
+                return [...prev, attr]
+            }
+            return prev
+        })
     }
 
     const saveStep3 = async (e: React.FormEvent) => {
@@ -295,7 +329,7 @@ export default function Dashboard() {
                         <div className="text-center">
                             <h2 className="text-3xl font-bold mb-2">Choose a Voice for Your Musical Me</h2>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
                             {[
                                 { id: "FEMALE", label: "Female", icon: "👩‍🎤" },
                                 { id: "MALE", label: "Male", icon: "👨‍🎤" },
@@ -303,14 +337,45 @@ export default function Dashboard() {
                             ].map((voice) => (
                                 <button
                                     key={voice.id}
-                                    onClick={() => saveStep2(voice.id as "MALE" | "FEMALE" | "ANY")}
-                                    className="p-6 bg-neutral-900 border border-neutral-800 rounded-2xl hover:border-green-500 hover:bg-neutral-800 transition-all group"
+                                    onClick={() => setVoiceType(voice.id as "MALE" | "FEMALE" | "ANY")}
+                                    className={`p-6 bg-neutral-900 border ${voiceType === voice.id ? 'border-green-500 bg-neutral-800' : 'border-neutral-800'} rounded-2xl hover:border-green-500 hover:bg-neutral-800 transition-all group`}
                                 >
                                     <div className="text-4xl mb-3 group-hover:scale-110 transition-transform duration-300">{voice.icon}</div>
                                     <div className="font-semibold">{voice.label}</div>
                                 </button>
                             ))}
                         </div>
+
+                        <div className="text-center mb-8">
+                            <h3 className="text-xl font-bold mb-2">Define Its Personality</h3>
+                            <p className="text-neutral-400">Select exactly 4 attributes that describe your musical soul.</p>
+                            <div className="text-sm font-mono mt-2 text-green-500">
+                                {selectedAttributes.length} / 4 Selected
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-10">
+                            {MUSICAL_ATTRIBUTES.map((attr) => (
+                                <button
+                                    key={attr}
+                                    onClick={() => toggleAttribute(attr)}
+                                    className={`py-3 px-2 text-xs font-bold rounded-xl border transition-all ${selectedAttributes.includes(attr)
+                                        ? "bg-green-500/20 border-green-500 text-green-400"
+                                        : "bg-neutral-900 border-neutral-800 text-neutral-500 hover:border-neutral-700"
+                                        }`}
+                                >
+                                    {attr}
+                                </button>
+                            ))}
+                        </div>
+
+                        <button
+                            onClick={saveStep2}
+                            disabled={loading || !voiceType || selectedAttributes.length !== 4}
+                            className="w-full py-4 bg-white text-black font-bold rounded-2xl hover:bg-neutral-200 transition-colors disabled:opacity-50"
+                        >
+                            Next
+                        </button>
                     </div>
                 )}
 
@@ -489,6 +554,7 @@ export default function Dashboard() {
                                     setCurrentStep(1)
                                     setNickname("")
                                     setVoiceType(null)
+                                    setSelectedAttributes([])
                                     setPlaylist(null)
                                     setUrl("")
                                     setTextInput("")
@@ -499,101 +565,103 @@ export default function Dashboard() {
                             </button>
                         </div>
                     </div>
-                )}
+                )
+                }
 
                 {/* Step 6: Musical Me Transfer */}
-                {currentStep === 6 && (
-                    <div className="space-y-12 animate-in fade-in zoom-in duration-700 text-center">
-                        <div className="space-y-4">
-                            <h2 className="text-4xl font-black bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
-                                Identity Transferred!
-                            </h2>
-                            <p className="text-xl text-neutral-400">Your Musical Me is now singing your soul...</p>
-                        </div>
-                        <div className="relative inline-block">
-                            {/* The Beast */}
-                            <div className="text-9xl animate-bounce-slow relative inline-block filter drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]">
-                                👾
-                                <div className="absolute top-0 right-0 animate-pulse text-4xl">🎵</div>
-                                <div className="absolute bottom-0 left-0 animate-pulse delay-700 text-4xl">🎶</div>
+                {
+                    currentStep === 6 && (
+                        <div className="space-y-12 animate-in fade-in zoom-in duration-700 text-center">
+                            <div className="space-y-4">
+                                <h2 className="text-4xl font-black bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
+                                    Identity Transferred!
+                                </h2>
+                                <p className="text-xl text-neutral-400">Your Musical Me is now singing your soul...</p>
+                            </div>
+                            <div className="relative inline-block">
+                                {/* The Beast */}
+                                <div className="text-9xl animate-bounce-slow relative inline-block filter drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+                                    👾
+                                    <div className="absolute top-0 right-0 animate-pulse text-4xl">🎵</div>
+                                    <div className="absolute bottom-0 left-0 animate-pulse delay-700 text-4xl">🎶</div>
+                                </div>
+
+                                {/* Singing Animation Overlay */}
+                                <div className="absolute -inset-4 border-4 border-dashed border-green-500/30 rounded-full animate-spin-slow"></div>
                             </div>
 
-                            {/* Singing Animation Overlay */}
-                            <div className="absolute -inset-4 border-4 border-dashed border-green-500/30 rounded-full animate-spin-slow"></div>
-                        </div>
 
 
-
-                        <div className="bg-neutral-900/50 border border-neutral-800 rounded-3xl p-8 backdrop-blur-md relative overflow-hidden">
-                            <div className="flex flex-col items-center gap-6 relative z-10">
-                                <button
-                                    onClick={() => setIsMuted(!isMuted)}
-                                    className="p-6 bg-white/5 hover:bg-white/10 rounded-full border border-white/10 transition-all transform hover:scale-110"
-                                >
-                                    {isMuted ? (
-                                        <span className="text-4xl">🔇</span>
-                                    ) : (
-                                        <span className="text-4xl">🔊</span>
-                                    )}
-                                </button>
-
-                                <audio
-                                    src={selectedAudioUrl}
-                                    autoPlay
-                                    loop
-                                    muted={isMuted}
-                                    style={{ display: 'none' }}
-                                />
-                            </div>
-
-                            {/* Visualizer bars */}
-                            <div className="absolute bottom-0 left-0 right-0 h-24 flex items-end justify-center gap-1 px-4 opacity-20 pointer-events-none">
-                                {[...Array(20)].map((_, i) => (
-                                    <div
-                                        key={i}
-                                        className="w-full bg-green-500 rounded-t-sm"
-                                        style={{
-                                            height: `${Math.random() * 100}%`,
-                                            animation: `visualizer 1s ease-in-out infinite alternate`,
-                                            animationDelay: `${i * 0.05}s`
-                                        }}
-                                    ></div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Public Feed */}
-                        <div className="space-y-6 max-w-2xl mx-auto text-left py-12 border-t border-neutral-800">
-                            <h3 className="text-xl font-bold flex items-center gap-2 mb-6">
-                                <span className="text-2xl">🌍</span> Other MyMuMEs
-                            </h3>
-                            <div className="grid gap-4 md:grid-cols-2">
-                                {publicProfiles.map((profile) => (
-                                    <div key={profile.id} className="bg-neutral-900/50 border border-neutral-800 p-4 rounded-xl flex items-center gap-4 hover:border-neutral-700 transition-colors">
-                                        {profile.image ? (
-                                            <Image src={profile.image} alt={profile.nickname || "User"} width={48} height={48} className="rounded-full" />
+                            <div className="bg-neutral-900/50 border border-neutral-800 rounded-3xl p-8 backdrop-blur-md relative overflow-hidden">
+                                <div className="flex flex-col items-center gap-6 relative z-10">
+                                    <button
+                                        onClick={() => setIsMuted(!isMuted)}
+                                        className="p-6 bg-white/5 hover:bg-white/10 rounded-full border border-white/10 transition-all transform hover:scale-110"
+                                    >
+                                        {isMuted ? (
+                                            <span className="text-4xl">🔇</span>
                                         ) : (
-                                            <div className="w-12 h-12 bg-neutral-800 rounded-full flex items-center justify-center text-xl">👤</div>
+                                            <span className="text-4xl">🔊</span>
                                         )}
-                                        <div>
-                                            <div className="font-bold text-white">{profile.nickname || "Anonymous"}</div>
-                                            <div className="text-xs text-neutral-500 bg-neutral-800 px-2 py-0.5 rounded-full inline-block mt-1">
-                                                Voice: {profile.voiceType || "Any"}
+                                    </button>
+
+                                    <audio
+                                        src={selectedAudioUrl}
+                                        autoPlay
+                                        loop
+                                        muted={isMuted}
+                                        style={{ display: 'none' }}
+                                    />
+                                </div>
+
+                                {/* Visualizer bars */}
+                                <div className="absolute bottom-0 left-0 right-0 h-24 flex items-end justify-center gap-1 px-4 opacity-20 pointer-events-none">
+                                    {[...Array(20)].map((_, i) => (
+                                        <div
+                                            key={i}
+                                            className="w-full bg-green-500 rounded-t-sm"
+                                            style={{
+                                                height: `${Math.random() * 100}%`,
+                                                animation: `visualizer 1s ease-in-out infinite alternate`,
+                                                animationDelay: `${i * 0.05}s`
+                                            }}
+                                        ></div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Public Feed */}
+                            <div className="space-y-6 max-w-2xl mx-auto text-left py-12 border-t border-neutral-800">
+                                <h3 className="text-xl font-bold flex items-center gap-2 mb-6">
+                                    <span className="text-2xl">🌍</span> Other MyMuMEs
+                                </h3>
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    {publicProfiles.map((profile) => (
+                                        <div key={profile.id} className="bg-neutral-900/50 border border-neutral-800 p-4 rounded-xl flex items-center gap-4 hover:border-neutral-700 transition-colors">
+                                            {profile.image ? (
+                                                <Image src={profile.image} alt={profile.nickname || "User"} width={48} height={48} className="rounded-full" />
+                                            ) : (
+                                                <div className="w-12 h-12 bg-neutral-800 rounded-full flex items-center justify-center text-xl">👤</div>
+                                            )}
+                                            <div>
+                                                <div className="font-bold text-white">{profile.nickname || "Anonymous"}</div>
+                                                <div className="text-xs text-neutral-500 bg-neutral-800 px-2 py-0.5 rounded-full inline-block mt-1">
+                                                    Voice: {profile.voiceType || "Any"}
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
                             </div>
-                        </div>
 
-                        <button
-                            onClick={() => setCurrentStep(5)}
-                            className="text-neutral-500 hover:text-white underline transition-colors"
-                        >
-                            Back to Profile
-                        </button>
+                            <button
+                                onClick={() => setCurrentStep(5)}
+                                className="text-neutral-500 hover:text-white underline transition-colors"
+                            >
+                                Back to Profile
+                            </button>
 
-                        <style jsx>{`
+                            <style jsx>{`
                             @keyframes visualizer {
                                 from { height: 10%; }
                                 to { height: 100%; }
@@ -609,15 +677,18 @@ export default function Dashboard() {
                                 to { transform: rotate(360deg); }
                             }
                         `}</style>
-                    </div>
-                )}
+                        </div>
+                    )
+                }
 
-                {error && currentStep !== 3 && (
-                    <div className="mt-8 p-4 bg-red-900/20 text-red-300 rounded-xl text-center border border-red-900/50">
-                        {error}
-                    </div>
-                )}
-            </main>
-        </div>
+                {
+                    error && currentStep !== 3 && (
+                        <div className="mt-8 p-4 bg-red-900/20 text-red-300 rounded-xl text-center border border-red-900/50">
+                            {error}
+                        </div>
+                    )
+                }
+            </main >
+        </div >
     )
 }
