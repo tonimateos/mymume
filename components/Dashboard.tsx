@@ -414,7 +414,7 @@ export default function Dashboard() {
                                     <textarea
                                         value={textInput}
                                         onChange={(e) => setTextInput(e.target.value)}
-                                        placeholder="Paste a list of Artist - Song..."
+                                        placeholder={`Pink Floyd - The Dark Side of the Moon \nSabrina - Boys, Boys Boys\n...`}
                                         rows={8}
                                         className="w-full px-6 py-4 bg-neutral-900 border border-neutral-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-green-500"
                                     />
