@@ -330,9 +330,9 @@ export default function Dashboard() {
     }
 
 
-    // Fetch profiles if we start at step 5
+    // Fetch profiles if we are at step 5 or 6
     useEffect(() => {
-        if (currentStep === 5) fetchPublicProfiles()
+        if (currentStep === 5 || currentStep === 6) fetchPublicProfiles()
     }, [currentStep, fetchPublicProfiles])
 
 
