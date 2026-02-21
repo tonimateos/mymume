@@ -28,7 +28,9 @@ export async function GET() {
                 nickname: true,
                 image: true,
                 voiceType: true,
-                musicIdentity: true
+                musicalAttributes: true,
+                musicIdentity: true,
+                city: true
             }
         })
 

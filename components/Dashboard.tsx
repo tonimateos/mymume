@@ -38,6 +38,7 @@ interface UserProfile {
     image: string | null
     musicIdentity: string | null
     musicalAttributes: string | null
+    city: string | null
 }
 
 const MUSICAL_ATTRIBUTES = [
@@ -57,6 +58,7 @@ export default function Dashboard() {
 
     // Step 1: Nickname State
     const [nickname, setNickname] = useState("")
+    const [city, setCity] = useState<string | null>(null)
 
     // Step 2: Voice & Attributes State
     const [voiceType, setVoiceType] = useState<"MALE" | "FEMALE" | "ANY" | null>(null)
@@ -90,6 +92,7 @@ export default function Dashboard() {
 
                 // Load data into state
                 if (data.nickname) setNickname(data.nickname)
+                if (data.city) setCity(data.city)
                 if (data.voiceType) setVoiceType(data.voiceType)
                 if (data.musicalAttributes) {
                     try {
@@ -148,11 +151,13 @@ export default function Dashboard() {
         setLoading(true)
         setError("")
         try {
-            await fetch("/api/playlist", {
+            const res = await fetch("/api/playlist", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ nickname })
             })
+            const data = await res.json()
+            if (data.city) setCity(data.city)
             setCurrentStep(2)
         } catch {
             setError("Failed to save nickname")
@@ -671,6 +676,11 @@ export default function Dashboard() {
                                             This is Your Identity
                                         </h2>
                                         <p className="text-xl text-neutral-400">The Musical Me that sings your soul...</p>
+                                        {city && (
+                                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-neutral-900 border border-neutral-800 rounded-full text-xs text-neutral-400">
+                                                <span>📍</span> {city}
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="relative inline-block py-12">
                                         {/* The Beast */}
@@ -804,6 +814,11 @@ export default function Dashboard() {
                                                     <div className="text-xs text-neutral-500 bg-neutral-800 px-2 py-0.5 rounded-full inline-block mt-1">
                                                         Voice: {profile.voiceType || "Any"}
                                                     </div>
+                                                    {profile.city && (
+                                                        <div className="text-[10px] text-neutral-500 mt-1">
+                                                            📍 {profile.city}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         ))}
