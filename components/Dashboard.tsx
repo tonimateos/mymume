@@ -534,11 +534,10 @@ export default function Dashboard() {
                             {/* Success Banner */}
                             <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 border border-green-500/20 rounded-3xl p-8 text-center backdrop-blur-sm">
                                 <div className="text-5xl mb-4">🎉</div>
-                                <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">Identity Established!</h2>
-                                <p className="text-neutral-300 mb-6">Welcome to the collective, <span className="font-bold text-white">{nickname}</span>.</p>
+                                <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">Musical Identity Understood!</h2>
+                                <p className="text-neutral-300 mb-6">Dear <span className="font-bold text-white">{nickname}</span>, these are your main musical tastes:</p>
 
                                 <div className="mt-6 bg-black/30 rounded-xl p-6 text-left border border-white/5">
-                                    <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-4">Your Analysis</h3>
                                     <div className="prose prose-invert prose-sm max-w-none text-neutral-300">
                                         {playlist?.musicIdentity && (
                                             (() => {
@@ -615,16 +614,16 @@ export default function Dashboard() {
                                 </h2>
                                 <p className="text-xl text-neutral-400">Your Musical Me is now singing your soul...</p>
                             </div>
-                            <div className="relative inline-block">
+                            <div className="relative inline-block py-12">
                                 {/* The Beast */}
-                                <div className="text-9xl animate-bounce-slow relative inline-block filter drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+                                <div className="text-[14rem] leading-none animate-bounce-slow relative inline-block filter drop-shadow-[0_0_40px_rgba(255,255,255,0.4)] md:text-[18rem]">
                                     👾
-                                    <div className="absolute top-0 right-0 animate-pulse text-4xl">🎵</div>
-                                    <div className="absolute bottom-0 left-0 animate-pulse delay-700 text-4xl">🎶</div>
+                                    <div className="absolute top-8 -right-8 animate-pulse text-6xl">🎵</div>
+                                    <div className="absolute bottom-4 -left-12 animate-pulse delay-700 text-6xl">🎶</div>
                                 </div>
 
                                 {/* Singing Animation Overlay */}
-                                <div className="absolute -inset-4 border-4 border-dashed border-green-500/30 rounded-full animate-spin-slow"></div>
+                                <div className="absolute -inset-12 border-8 border-dashed border-green-500/20 rounded-full animate-spin-slow"></div>
                             </div>
 
 
