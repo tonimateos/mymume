@@ -60,6 +60,7 @@ export default function Dashboard() {
     const [playlist, setPlaylist] = useState<PlaylistData | null>(null)
     // General State
     const [loading, setLoading] = useState(false)
+    const [loadingMessage, setLoadingMessage] = useState("Analyzing...")
     const [analyzing, setAnalyzing] = useState(false)
     const [isSinging, setIsSinging] = useState(false)
     const [audioUrl, setAudioUrl] = useState("")
@@ -153,7 +154,13 @@ export default function Dashboard() {
     const saveStep3 = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
+        setLoadingMessage("Analyzing...")
         setError("")
+
+        // Start a timer to change the loading message after 2 seconds
+        const messageTimer = setTimeout(() => {
+            setLoadingMessage("Finding first songs...")
+        }, 2000)
 
         const payload: any = {}
         if (activeTab === "url") {
@@ -184,6 +191,7 @@ export default function Dashboard() {
         } catch (err: any) {
             setError(err.message || "Failed to save playlist")
         } finally {
+            clearTimeout(messageTimer)
             setLoading(false)
         }
     }
@@ -360,7 +368,7 @@ export default function Dashboard() {
                                 disabled={loading || (activeTab === 'url' ? !url : !textInput)}
                                 className="w-full py-4 bg-white text-black font-bold rounded-2xl hover:bg-neutral-200 transition-colors disabled:opacity-50"
                             >
-                                {loading ? "Analyzing..." : "Analyze Playlist"}
+                                {loading ? loadingMessage : "Analyze Playlist"}
                             </button>
                         </form>
 

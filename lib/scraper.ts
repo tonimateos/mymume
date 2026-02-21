@@ -26,35 +26,83 @@ export async function fetchPlaylistTracks(playlistId: string): Promise<ScrapedTr
     try {
         await page.goto(`https://open.spotify.com/playlist/${playlistId}`);
 
-        // Wait for the tracklist to render
-        // Spotify's public view uses [data-testid="tracklist-row"]
+        // Initial wait for the first elements to appear
         await page.waitForSelector('[data-testid="tracklist-row"]', { timeout: 15000 });
 
-        const tracks = await page.evaluate(() => {
-            const rows = Array.from(document.querySelectorAll('[data-testid="tracklist-row"]'));
-            return rows.map(row => {
-                // Robust selectors for title
-                const titleElement =
-                    row.querySelector('[data-testid="track-name"]') ||
-                    row.querySelector('a[href*="/track/"]') ||
-                    row.querySelector('div[dir="auto"].encore-text-body-medium');
+        const allTracks = new Map<string, { title: string, artists: string }>();
+        let lastCount = 0;
+        let stagnantIterations = 0;
 
-                // Robust selectors for artists
-                const artistElements = row.querySelectorAll('[data-testid="track-artist"], a[href*="/artist/"]');
-                const artists = artistElements.length > 0
-                    ? Array.from(artistElements).map(el => el.textContent?.trim()).filter(Boolean)
-                    : [row.querySelector('span.encore-text-body-small')?.textContent?.trim() || "Unknown Artist"];
+        console.log(`[Scraper] Starting scroll-and-capture...`);
 
-                // Remove duplicates from artists array
-                const uniqueArtists = [...new Set(artists)];
+        // We scroll several times to trigger lazy loading in Spotify's virtualized list
+        for (let i = 0; i < 15; i++) {
+            const currentTracks = await page.evaluate(() => {
+                const rows = Array.from(document.querySelectorAll('[data-testid="tracklist-row"]'));
+                return rows.map(row => {
+                    const titleElement =
+                        row.querySelector('[data-testid="track-name"]') ||
+                        row.querySelector('a[href*="/track/"]') ||
+                        row.querySelector('div[dir="auto"].encore-text-body-medium');
 
-                return {
-                    title: titleElement?.textContent?.trim() || "Unknown Title",
-                    artists: uniqueArtists.join(', '),
-                };
+                    const artistElements = row.querySelectorAll('[data-testid="track-artist"], a[href*="/artist/"]');
+                    const artists = artistElements.length > 0
+                        ? Array.from(artistElements).map(el => el.textContent?.trim()).filter(Boolean)
+                        : [row.querySelector('span.encore-text-body-small')?.textContent?.trim() || "Unknown Artist"];
+
+                    const uniqueArtists = [...new Set(artists)];
+
+                    return {
+                        title: titleElement?.textContent?.trim() || "Unknown Title",
+                        artists: uniqueArtists.join(', '),
+                    };
+                });
             });
-        });
 
+            // Add new unique tracks to our collection
+            currentTracks.forEach(track => {
+                const key = `${track.artists} - ${track.title}`.toLowerCase();
+                if (!allTracks.has(key)) {
+                    allTracks.set(key, track);
+                }
+            });
+
+            console.log(`[Scraper] Iteration ${i + 1}: Found ${allTracks.size} unique tracks so far.`);
+
+            // If we didn't find any new tracks for 2 iterations, we've probably reached the end
+            if (allTracks.size === lastCount) {
+                stagnantIterations++;
+                if (stagnantIterations >= 2) break;
+            } else {
+                stagnantIterations = 0;
+            }
+
+            lastCount = allTracks.size;
+
+            // Scroll down to trigger more loading
+            // We hover over a track row first to ensure the scroll happens in the right container
+            const trackRows = page.locator('[data-testid="tracklist-row"]');
+            const rowCount = await trackRows.count();
+            if (rowCount > 0) {
+                try {
+                    // Hover over the last visible row to anchor the scroll
+                    await trackRows.nth(rowCount - 1).hover();
+                    // Use mouse wheel for targeted scrolling
+                    await page.mouse.wheel(0, 1000);
+                    console.log("Found track to move mouse to...")
+                } catch (e) {
+                    console.log("Found track to move mouse to... but failed to scroll")
+                    await page.evaluate(() => window.scrollBy(0, 1000));
+                }
+            } else {
+                console.log("No track found to move mouse to... scrolling general page")
+                await page.evaluate(() => window.scrollBy(0, 1000));
+            }
+
+            await page.waitForTimeout(2000);
+        }
+
+        const tracks = Array.from(allTracks.values());
         console.log(`[Scraper] Successfully scraped ${tracks.length} tracks.`);
         return tracks;
 
