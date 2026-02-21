@@ -495,7 +495,6 @@ export default function Dashboard() {
                                 <span className="text-4xl">🔮</span>
                             </div>
                             <div>
-                                <h2 className="text-3xl font-bold mb-2">Ready to discover your identity?</h2>
                                 <p className="text-neutral-400">We found <strong>{playlist?.type === 'spotify' && playlist.tracks ? playlist.tracks.total : (playlist?.content?.split('\n').length || 0)}</strong> songs.</p>
                             </div>
 
@@ -516,12 +515,12 @@ export default function Dashboard() {
                                     disabled={analyzing}
                                     className="flex-1 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xl rounded-2xl shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02]"
                                 >
-                                    {analyzing ? "Analyzing Magic..." : "Analyze My Music Identity"}
+                                    {analyzing ? "Understanding Your Musical Identity..." : "Transfer My Musical Identity"}
                                 </button>
                             </div>
                             {analyzing && (
                                 <p className="text-sm text-neutral-400 animate-pulse mt-4">
-                                    Please be patient, generating your unique music identity can take a moment...
+                                    Please be patient, understanding your unique music identity can take a moment...
                                 </p>
                             )}
                         </div>
