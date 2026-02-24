@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from "react"
 import { useSession, signOut } from "next-auth/react"
 import { useSearchParams } from "next/navigation"
 import Image from "next/image"
+import PixelAvatar from "./PixelAvatar"
+import AvatarTester from "./AvatarTester"
 
 interface SpotifyPlaylist {
     type: 'spotify'
@@ -178,6 +180,13 @@ export default function Dashboard() {
             detectCity()
         }
     }, [currentStep, city, status])
+
+    const handleRandomizeAvatar = () => {
+        const prefixes = ["Electric", "Neon", "Sonic", "Melodic", "Glitch", "Echo", "Synth", "Vibe", "Groove", "Bass", "Digital", "Cosmic"]
+        const suffixes = ["Mume", "Vibe", "Flow", "Soul", "Beat", "Wave", "Spirit", "Synth", "Harmony", "Pulse"]
+        const randomName = `${prefixes[Math.floor(Math.random() * prefixes.length)]} ${suffixes[Math.floor(Math.random() * suffixes.length)]}`
+        setNickname(randomName)
+    }
 
     const saveStep1 = async () => {
         if (!nickname.trim()) return setError("Please enter a nickname")
@@ -540,7 +549,21 @@ export default function Dashboard() {
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="text-center">
                             <h2 className="text-3xl font-bold mb-2">Name Your Musical Me</h2>
+                            <p className="text-sm text-neutral-500">Click the Mume to randomize</p>
                         </div>
+
+                        <div
+                            onClick={handleRandomizeAvatar}
+                            className="flex justify-center p-8 bg-neutral-900 border border-neutral-800 rounded-3xl shadow-inner cursor-pointer hover:bg-neutral-800 transition-all group relative overflow-hidden active:scale-95"
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            <PixelAvatar
+                                seed={nickname || session?.user?.id || 'mume'}
+                                size={160}
+                                className="drop-shadow-[0_0_20px_rgba(34,197,94,0.3)] group-hover:scale-110 transition-transform duration-300"
+                            />
+                        </div>
+
                         <input
                             type="text"
                             value={nickname}
@@ -970,18 +993,16 @@ export default function Dashboard() {
                                                 )}
 
                                                 <div className="flex gap-4 items-start relative z-10 text-left">
-                                                    {profile.image ? (
-                                                        <div className="relative shrink-0">
-                                                            <div className="w-14 h-14 rounded-2xl overflow-hidden border border-neutral-700/50">
-                                                                <Image src={profile.image} alt={profile.nickname || "User"} width={56} height={56} className="object-cover" />
-                                                            </div>
-                                                            {profile.connectionStatus === 'positive' && (
-                                                                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-neutral-900 flex items-center justify-center text-[8px] animate-pulse">✨</div>
-                                                            )}
-                                                        </div>
-                                                    ) : (
-                                                        <div className="w-14 h-14 bg-neutral-800/80 rounded-2xl flex items-center justify-center text-2xl border border-neutral-700/50 shrink-0">👤</div>
-                                                    )}
+                                                    <div className="relative shrink-0">
+                                                        <PixelAvatar
+                                                            seed={profile.id}
+                                                            size={56}
+                                                            className="rounded-2xl border border-neutral-700/50 shadow-inner"
+                                                        />
+                                                        {profile.connectionStatus === 'positive' && (
+                                                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-neutral-900 flex items-center justify-center text-[8px] animate-pulse">✨</div>
+                                                        )}
+                                                    </div>
 
                                                     <div className="flex-1 min-w-0">
                                                         <div className="flex justify-between items-start gap-2">
@@ -1038,6 +1059,11 @@ export default function Dashboard() {
                                             </div>
                                         ))}
                                     </div>
+
+                                    {/* Avatar Tester Area */}
+                                    <div className="mt-16 pt-16 border-t border-neutral-800">
+                                        <AvatarTester />
+                                    </div>
                                 </div>
                             )}
 
@@ -1067,8 +1093,8 @@ export default function Dashboard() {
                         <div className="max-w-md w-full text-center space-y-8">
                             <div className="relative flex justify-center items-center gap-8 py-12">
                                 {/* User Mume */}
-                                <div className={`text-8xl transition-all duration-500 ${testPart === 1 ? 'scale-125 filter drop-shadow-[0_0_30px_rgba(34,197,94,0.5)]' : 'opacity-50'} ${testPart !== null && testPart <= 3 ? 'animate-musical-beat' : ''}`}>
-                                    👾
+                                <div className={`transition-all duration-500 ${testPart === 1 ? 'scale-125 filter drop-shadow-[0_0_30px_rgba(34,197,94,0.5)]' : 'opacity-50'}`}>
+                                    <PixelAvatar seed={session?.user?.id || 'me'} size={128} />
                                     <div className="text-xs font-bold text-neutral-500 mt-2 uppercase tracking-widest">{nickname}</div>
                                 </div>
 
@@ -1078,8 +1104,8 @@ export default function Dashboard() {
                                 </div>
 
                                 {/* Target Mume */}
-                                <div className={`text-8xl transition-all duration-500 ${testPart === 2 ? 'scale-125 filter drop-shadow-[0_0_30px_rgba(59,130,246,0.5)]' : 'opacity-50'} ${testPart !== null && testPart <= 3 ? 'animate-musical-beat' : ''}`}>
-                                    👤
+                                <div className={`transition-all duration-500 ${testPart === 2 ? 'scale-125 filter drop-shadow-[0_0_30px_rgba(59,130,246,0.5)]' : 'opacity-50'}`}>
+                                    <PixelAvatar seed={testProfile.id} size={128} />
                                     <div className="text-xs font-bold text-neutral-500 mt-2 uppercase tracking-widest truncate max-w-[80px]">
                                         {testProfile.nickname}
                                     </div>
