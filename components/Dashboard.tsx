@@ -937,7 +937,7 @@ export default function Dashboard() {
                                         <h2 className="text-3xl font-black bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent mb-2">
                                             MuME Collective
                                         </h2>
-                                        <p className="text-neutral-400">Discover other unique identities</p>
+                                        <p className="text-neutral-400">Connect with other unique musical identities</p>
                                     </div>
 
                                     <div className="bg-neutral-900/50 border border-neutral-800 rounded-3xl p-8 backdrop-blur-md relative overflow-hidden">
@@ -958,52 +958,72 @@ export default function Dashboard() {
                                     </div>
 
                                     {/* Public Feed */}
-                                    <div className="grid gap-4 md:grid-cols-2 text-left">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         {publicProfiles.map((profile) => (
-                                            <div key={profile.id} className="bg-neutral-900/50 border border-neutral-800 p-4 rounded-xl flex items-center gap-4 hover:border-neutral-700 transition-colors">
-                                                {profile.image ? (
-                                                    <Image src={profile.image} alt={profile.nickname || "User"} width={48} height={48} className="rounded-full" />
-                                                ) : (
-                                                    <div className="w-12 h-12 bg-neutral-800 rounded-full flex items-center justify-center text-xl">👤</div>
+                                            <div
+                                                key={profile.id}
+                                                className={`group relative overflow-hidden bg-neutral-900/40 backdrop-blur-md border rounded-2xl p-5 transition-all duration-300 hover:shadow-[0_0_30px_rgba(34,197,94,0.1)] ${profile.connectionStatus === 'positive' ? 'border-green-500/30' : 'border-neutral-800/50 hover:border-neutral-700'}`}
+                                            >
+                                                {/* Background Glow for Matches */}
+                                                {profile.connectionStatus === 'positive' && (
+                                                    <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent pointer-events-none"></div>
                                                 )}
-                                                <div className="flex-1">
-                                                    <div className="flex justify-between items-start">
-                                                        <div className="font-bold text-white">{profile.nickname || "Anonymous"}</div>
-                                                        {profile.connectionStatus && (
-                                                            <div className="flex gap-2 items-center">
-                                                                <div className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${profile.connectionStatus === 'positive' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}`}>
-                                                                    {profile.connectionStatus === 'positive' ? 'MATCH' : 'NOPE'}
-                                                                </div>
-                                                                {profile.connectionStatus === 'positive' && (
-                                                                    <button
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation()
-                                                                            fetchMatchedUserSongs(profile.id)
-                                                                        }}
-                                                                        className="text-xs text-green-400 hover:text-green-300 font-bold underline"
-                                                                    >
-                                                                        songs
-                                                                    </button>
-                                                                )}
+
+                                                <div className="flex gap-4 items-start relative z-10 text-left">
+                                                    {profile.image ? (
+                                                        <div className="relative shrink-0">
+                                                            <div className="w-14 h-14 rounded-2xl overflow-hidden border border-neutral-700/50">
+                                                                <Image src={profile.image} alt={profile.nickname || "User"} width={56} height={56} className="object-cover" />
                                                             </div>
-                                                        )}
-                                                    </div>
-                                                    <div className="flex flex-wrap gap-2 mt-2">
-                                                        <div className="text-[10px] text-neutral-400 bg-neutral-800/50 border border-neutral-700/30 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-                                                            Voice: {profile.voiceType || "Any"}
+                                                            {profile.connectionStatus === 'positive' && (
+                                                                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-neutral-900 flex items-center justify-center text-[8px] animate-pulse">✨</div>
+                                                            )}
                                                         </div>
-                                                        {profile.country && (
-                                                            <div className="text-[10px] text-neutral-400 bg-neutral-800/50 border border-neutral-700/30 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-                                                                📍 {profile.country}
-                                                            </div>
-                                                        )}
+                                                    ) : (
+                                                        <div className="w-14 h-14 bg-neutral-800/80 rounded-2xl flex items-center justify-center text-2xl border border-neutral-700/50 shrink-0">👤</div>
+                                                    )}
+
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex justify-between items-start gap-2">
+                                                            <div className="font-bold text-white truncate text-base">{profile.nickname || "Anonymous"}</div>
+                                                            {profile.connectionStatus && (
+                                                                <div className={`shrink-0 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-tighter ${profile.connectionStatus === 'positive' ? 'bg-green-500 text-black' : 'bg-red-500/20 text-red-400 border border-red-500/30'}`}>
+                                                                    {profile.connectionStatus === 'positive' ? 'Soulmate' : 'No Vibe'}
+                                                                </div>
+                                                            )}
+                                                        </div>
+
+                                                        <div className="flex flex-wrap gap-1.5 mt-2">
+                                                            <span className="text-[10px] text-neutral-400 bg-black/40 px-2 py-0.5 rounded-full border border-neutral-800">
+                                                                {profile.voiceType || "Any"}
+                                                            </span>
+                                                            {profile.country && (
+                                                                <span className="text-[10px] text-neutral-400 bg-black/40 px-2 py-0.5 rounded-full border border-neutral-800">
+                                                                    📍 {profile.country}
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                    <button
-                                                        onClick={() => startCompatibilityTest(profile)}
-                                                        className="mt-3 w-full py-2 bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-bold rounded-lg transition-colors border border-neutral-700/50"
-                                                    >
-                                                        Test Compatibility
-                                                    </button>
+                                                </div>
+
+                                                <div className="mt-5 space-y-2 relative z-10">
+                                                    {profile.connectionStatus === 'positive' ? (
+                                                        <button
+                                                            onClick={() => fetchMatchedUserSongs(profile.id)}
+                                                            className="w-full py-2.5 bg-green-500 hover:bg-green-400 text-black text-xs font-black rounded-xl transition-all flex items-center justify-center gap-2 group/btn"
+                                                        >
+                                                            <span>Explore Sonic Identity</span>
+                                                            <span className="opacity-60 group-hover/btn:translate-x-1 transition-transform">→</span>
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => startCompatibilityTest(profile)}
+                                                            className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-white text-xs font-bold rounded-xl transition-colors border border-white/10 flex items-center justify-center gap-2"
+                                                        >
+                                                            <span>Test Compatibility</span>
+                                                            {profile.connectionStatus === 'negative' && <span className="text-[10px] opacity-40">(Retry)</span>}
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
                                         ))}
