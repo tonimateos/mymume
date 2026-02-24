@@ -90,6 +90,10 @@ export default function Dashboard() {
     const [testPart, setTestPart] = useState<number | null>(null)
     const [testOutcome, setTestOutcome] = useState<"positive" | "negative" | null>(null)
 
+    // Song Access State
+    const [matchedSongs, setMatchedSongs] = useState<{ nickname: string, songs: string[] } | null>(null)
+    const [showSongModal, setShowSongModal] = useState(false)
+
     const fetchProfileAndPlaylist = useCallback(async () => {
         setLoading(true)
         setError("")
@@ -473,6 +477,26 @@ export default function Dashboard() {
             // Keep testProfile and outcome for the UI to show the final message
             // But clear testPart so it doesn't loop
             setTestPart(4) // Status 4 means "finished, showing final result"
+        }
+    }
+
+    const fetchMatchedUserSongs = async (userId: string) => {
+        setLoading(true)
+        try {
+            const res = await fetch(`/api/profile/songs?userId=${userId}`)
+            if (res.ok) {
+                const data = await res.json()
+                setMatchedSongs(data)
+                setShowSongModal(true)
+            } else {
+                const data = await res.json()
+                setError(data.error || "Failed to fetch songs")
+            }
+        } catch (err) {
+            console.error("Error fetching songs:", err)
+            setError("Connection failed. Please try again.")
+        } finally {
+            setLoading(false)
         }
     }
 
@@ -946,8 +970,21 @@ export default function Dashboard() {
                                                     <div className="flex justify-between items-start">
                                                         <div className="font-bold text-white">{profile.nickname || "Anonymous"}</div>
                                                         {profile.connectionStatus && (
-                                                            <div className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${profile.connectionStatus === 'positive' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}`}>
-                                                                {profile.connectionStatus === 'positive' ? 'MATCH' : 'NOPE'}
+                                                            <div className="flex gap-2 items-center">
+                                                                <div className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${profile.connectionStatus === 'positive' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}`}>
+                                                                    {profile.connectionStatus === 'positive' ? 'MATCH' : 'NOPE'}
+                                                                </div>
+                                                                {profile.connectionStatus === 'positive' && (
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation()
+                                                                            fetchMatchedUserSongs(profile.id)
+                                                                        }}
+                                                                        className="text-xs text-green-400 hover:text-green-300 font-bold underline"
+                                                                    >
+                                                                        songs
+                                                                    </button>
+                                                                )}
                                                             </div>
                                                         )}
                                                     </div>
@@ -1042,22 +1079,76 @@ export default function Dashboard() {
                                         </h3>
                                         <p className="text-neutral-400 mb-8">
                                             {testOutcome === 'positive'
-                                                ? `The musical vibes between ${nickname} and ${testProfile.nickname} are perfectly aligned.`
+                                                ? `The musical vibes between ${nickname} and ${testProfile.nickname} are perfectly aligned. You now have access to their song list!`
                                                 : `${nickname}'s musical frequencies aren't quite matching with ${testProfile.nickname} this time.`}
                                         </p>
-                                        <button
-                                            onClick={() => {
-                                                setTestProfile(null)
-                                                setTestPart(null)
-                                                setTestOutcome(null)
-                                            }}
-                                            className="px-8 py-4 bg-white text-black font-bold rounded-2xl hover:bg-neutral-200 transition-colors"
-                                        >
-                                            Done
-                                        </button>
+                                        <div className="flex gap-4 justify-center">
+                                            {testOutcome === 'positive' && (
+                                                <button
+                                                    onClick={() => {
+                                                        const targetId = testProfile.id
+                                                        setTestProfile(null)
+                                                        setTestPart(null)
+                                                        fetchMatchedUserSongs(targetId)
+                                                    }}
+                                                    className="px-8 py-4 bg-green-500 text-white font-bold rounded-2xl hover:bg-green-400 transition-colors shadow-lg shadow-green-500/20"
+                                                >
+                                                    See {testProfile.nickname} songs
+                                                </button>
+                                            )}
+                                            <button
+                                                onClick={() => {
+                                                    setTestProfile(null)
+                                                    setTestPart(null)
+                                                    setTestOutcome(null)
+                                                }}
+                                                className={`px-8 py-4 bg-white text-black font-bold rounded-2xl hover:bg-neutral-200 transition-colors ${testOutcome === 'positive' ? 'opacity-50 text-sm py-2 px-4' : ''}`}
+                                            >
+                                                Done
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
                             </div>
+                        </div>
+                    </div>
+                )}
+                {/* Song List Modal */}
+                {showSongModal && matchedSongs && (
+                    <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[60] flex items-center justify-center p-6 animate-in fade-in zoom-in duration-300">
+                        <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-8 max-w-xl w-full max-h-[80vh] flex flex-col shadow-2xl">
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-2xl font-bold text-white">
+                                    <span className="text-green-400">{matchedSongs.nickname}&apos;s</span> Songs
+                                </h3>
+                                <button
+                                    onClick={() => setShowSongModal(false)}
+                                    className="p-2 bg-neutral-800 hover:bg-neutral-700 rounded-full text-neutral-400 transition-colors"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto pr-2 space-y-2 custom-scrollbar">
+                                {matchedSongs.songs.length > 0 ? (
+                                    matchedSongs.songs.map((song, i) => (
+                                        <div key={i} className="p-3 bg-neutral-800/50 border border-neutral-700/30 rounded-xl text-neutral-300 hover:bg-neutral-800 transition-colors">
+                                            {song}
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-12 text-neutral-500">
+                                        No songs found.
+                                    </div>
+                                )}
+                            </div>
+
+                            <button
+                                onClick={() => setShowSongModal(false)}
+                                className="mt-8 w-full py-4 bg-white text-black font-bold rounded-2xl hover:bg-neutral-200 transition-colors"
+                            >
+                                Close
+                            </button>
                         </div>
                     </div>
                 )}
