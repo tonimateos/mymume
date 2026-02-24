@@ -40,6 +40,7 @@ interface UserProfile {
     musicalAttributes: string | null
     city: string | null
     country: string | null
+    connectionStatus?: string | null
 }
 
 const MUSICAL_ATTRIBUTES = [
@@ -83,6 +84,11 @@ export default function Dashboard() {
     const [selectedAudioUrl, setSelectedAudioUrl] = useState("")
     const [showMyIdentity, setShowMyIdentity] = useState(false)
     const [showFullAnalysis, setShowFullAnalysis] = useState(false)
+
+    // Compatibility Test State
+    const [testProfile, setTestProfile] = useState<UserProfile | null>(null)
+    const [testPart, setTestPart] = useState<number | null>(null)
+    const [testOutcome, setTestOutcome] = useState<"positive" | "negative" | null>(null)
 
     const fetchProfileAndPlaylist = useCallback(async () => {
         setLoading(true)
@@ -387,6 +393,87 @@ export default function Dashboard() {
         setSelectedAudioUrl(randomSong)
         setCurrentStep(6)
         setShowMyIdentity(true) // Show identity first time entering Step 6
+    }
+
+    const startCompatibilityTest = (profile: UserProfile) => {
+        setTestProfile(profile)
+        setTestPart(1)
+        setTestOutcome(null)
+
+        // Pick song for Part 1 (based on user's gender)
+        const userGender = (voiceType === "FEMALE" ? "female" : "male") as "male" | "female"
+        const part1Songs = {
+            male: ["/mocks/meeting/part1/male/man-singing-who-are-you.mp3"],
+            female: [
+                "/mocks/meeting/part1/female/Echoes_of_Shared_Souls.mp3",
+                "/mocks/meeting/part1/female/Echoes_of_Shared_Souls_2.mp3"
+            ]
+        }
+        const pool = part1Songs[userGender]
+        const song = pool[Math.floor(Math.random() * pool.length)]
+        setSelectedAudioUrl(song)
+        setIsMuted(false) // Unmute for test
+    }
+
+    const handleTestPartEnd = async () => {
+        if (!testProfile || testPart === null) {
+            console.log("Song finished (not in test)")
+            return
+        }
+
+        if (testPart === 1) {
+            setTestPart(2)
+            // Pick song for Part 2 (based on other Mume's gender)
+            const targetGender = (testProfile.voiceType === "FEMALE" ? "female" : "male") as "male" | "female"
+            const part2Songs = {
+                male: ["/mocks/meeting/part2/male/Dangerous_Charm.mp3"],
+                female: ["/mocks/meeting/part2/female/Groove_Therapy.mp3"]
+            }
+            const pool = part2Songs[targetGender] || part2Songs.male // fallback
+            const song = pool[Math.floor(Math.random() * pool.length)]
+            setSelectedAudioUrl(song)
+        } else if (testPart === 2) {
+            setTestPart(3)
+            // Random outcome
+            const outcome = Math.random() > 0.5 ? "positive" : "negative"
+            setTestOutcome(outcome)
+
+            // Pick song for Part 3 (based on outcome and user's gender)
+            const userGender = (voiceType === "FEMALE" ? "female" : "male") as "male" | "female"
+            const part3Songs = {
+                positive: {
+                    male: ["/mocks/meeting/part3/positive/male/youreTheOne.mp3"],
+                    female: ["/mocks/meeting/part3/positive/female/youreTheOne.mp3"]
+                },
+                negative: {
+                    male: ["/mocks/meeting/part3/negative/male/Echoes_of_Another_Life.mp3"],
+                    female: ["/mocks/meeting/part3/negative/female/Echoes_in_the_Veil.mp3"]
+                }
+            }
+            const pool = part3Songs[outcome][userGender] || part3Songs[outcome].male
+            const song = pool[Math.floor(Math.random() * pool.length)]
+            setSelectedAudioUrl(song)
+
+            // Save to DB
+            try {
+                await fetch("/api/mume-connection", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        receiverId: testProfile.id,
+                        status: outcome
+                    })
+                })
+                fetchPublicProfiles()
+            } catch (err) {
+                console.error("Failed to save connection:", err)
+            }
+        } else if (testPart === 3) {
+            // Show result for a bit, then reset test state
+            // Keep testProfile and outcome for the UI to show the final message
+            // But clear testPart so it doesn't loop
+            setTestPart(4) // Status 4 means "finished, showing final result"
+        }
     }
 
 
@@ -694,7 +781,7 @@ export default function Dashboard() {
                                         autoPlay
                                         muted={isMuted}
                                         style={{ display: 'none' }}
-                                        onEnded={() => console.log("Song finished")}
+                                        onEnded={handleTestPartEnd}
                                     />
                                 )}
                                 <button
@@ -855,8 +942,15 @@ export default function Dashboard() {
                                                 ) : (
                                                     <div className="w-12 h-12 bg-neutral-800 rounded-full flex items-center justify-center text-xl">👤</div>
                                                 )}
-                                                <div>
-                                                    <div className="font-bold text-white">{profile.nickname || "Anonymous"}</div>
+                                                <div className="flex-1">
+                                                    <div className="flex justify-between items-start">
+                                                        <div className="font-bold text-white">{profile.nickname || "Anonymous"}</div>
+                                                        {profile.connectionStatus && (
+                                                            <div className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${profile.connectionStatus === 'positive' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}`}>
+                                                                {profile.connectionStatus === 'positive' ? 'MATCH' : 'NOPE'}
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                     <div className="flex flex-wrap gap-2 mt-2">
                                                         <div className="text-[10px] text-neutral-400 bg-neutral-800/50 border border-neutral-700/30 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
                                                             Voice: {profile.voiceType || "Any"}
@@ -867,6 +961,12 @@ export default function Dashboard() {
                                                             </div>
                                                         )}
                                                     </div>
+                                                    <button
+                                                        onClick={() => startCompatibilityTest(profile)}
+                                                        className="mt-3 w-full py-2 bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-bold rounded-lg transition-colors border border-neutral-700/50"
+                                                    >
+                                                        Test Compatibility
+                                                    </button>
                                                 </div>
                                             </div>
                                         ))}
@@ -898,6 +998,14 @@ export default function Dashboard() {
                                 from { transform: rotate(0deg); }
                                 to { transform: rotate(360deg); }
                             }
+                            @keyframes ping-slow {
+                                0% { left: -20%; opacity: 0; }
+                                50% { opacity: 1; }
+                                100% { left: 100%; opacity: 0; }
+                            }
+                            .animate-ping-slow {
+                                animation: ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+                            }
                         `}</style>
                         </div>
                     )
@@ -910,6 +1018,73 @@ export default function Dashboard() {
                         </div>
                     )
                 }
+                {/* Compatibility Test Overlay */}
+                {testProfile && testPart !== null && (
+                    <div className="fixed inset-0 bg-black/90 backdrop-blur-xl z-50 flex items-center justify-center p-6 animate-in fade-in duration-500">
+                        <div className="max-w-md w-full text-center space-y-8">
+                            <div className="relative flex justify-center items-center gap-8 py-12">
+                                {/* User Mume */}
+                                <div className={`text-8xl transition-all duration-500 ${testPart === 1 ? 'scale-125 filter drop-shadow-[0_0_30px_rgba(34,197,94,0.5)]' : 'opacity-50'}`}>
+                                    👾
+                                    <div className="text-xs font-bold text-neutral-500 mt-2 uppercase tracking-widest">You</div>
+                                </div>
+
+                                {/* Connection Lines/Animation */}
+                                <div className="flex-1 h-px bg-gradient-to-r from-green-500 via-white to-blue-500 relative">
+                                    <div className={`absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent w-20 h-full animate-ping-slow ${testPart === 1 || testPart === 2 ? 'opacity-100' : 'opacity-0'}`}></div>
+                                </div>
+
+                                {/* Target Mume */}
+                                <div className={`text-8xl transition-all duration-500 ${testPart === 2 ? 'scale-125 filter drop-shadow-[0_0_30px_rgba(59,130,246,0.5)]' : 'opacity-50'}`}>
+                                    👤
+                                    <div className="text-xs font-bold text-neutral-500 mt-2 uppercase tracking-widest truncate max-w-[80px]">
+                                        {testProfile.nickname}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4 min-h-[100px] flex flex-col justify-center">
+                                {testPart === 1 && (
+                                    <p className="text-xl font-bold animate-pulse text-green-400">
+                                        Your Mume is establishing a musical connection with {testProfile.nickname}...
+                                    </p>
+                                )}
+                                {testPart === 2 && (
+                                    <p className="text-xl font-bold animate-pulse text-blue-400">
+                                        {testProfile.nickname} is responding musically...
+                                    </p>
+                                )}
+                                {testPart === 3 && (
+                                    <p className="text-xl font-bold text-white">
+                                        Revealing affinity...
+                                    </p>
+                                )}
+                                {testPart === 4 && (
+                                    <div className="animate-in zoom-in duration-700">
+                                        <h3 className={`text-4xl font-black mb-2 ${testOutcome === 'positive' ? 'text-green-500' : 'text-red-500'}`}>
+                                            {testOutcome === 'positive' ? 'Positive Connection!' : 'Negative Connection'}
+                                        </h3>
+                                        <p className="text-neutral-400 mb-8">
+                                            {testOutcome === 'positive'
+                                                ? `The musical vibes between you and ${testProfile.nickname} are perfectly aligned.`
+                                                : `Your musical frequencies aren't quite matching with ${testProfile.nickname} this time.`}
+                                        </p>
+                                        <button
+                                            onClick={() => {
+                                                setTestProfile(null)
+                                                setTestPart(null)
+                                                setTestOutcome(null)
+                                            }}
+                                            className="px-8 py-4 bg-white text-black font-bold rounded-2xl hover:bg-neutral-200 transition-colors"
+                                        >
+                                            Done
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
             </main >
         </div >
     )

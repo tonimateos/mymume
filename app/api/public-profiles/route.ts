@@ -14,12 +14,12 @@ export async function GET() {
     }
 
     try {
-        // Fetch up to 50 users who have analyzed their identity
-        // Exclude the current user? Optional.
+        // Fetch up to 20 users who have analyzed their identity
+        // Include connection status with the current user
         const profiles = await prisma.user.findMany({
             where: {
                 musicIdentity: { not: null },
-                // id: { not: session.user.id } // Uncomment if we want to hide self
+                id: { not: session.user.id } // Hide self from feed
             },
             take: 20,
             orderBy: { updatedAt: 'desc' },
@@ -31,11 +31,26 @@ export async function GET() {
                 musicalAttributes: true,
                 musicIdentity: true,
                 city: true,
-                country: true
+                country: true,
+                receivedConnections: {
+                    where: {
+                        senderId: session.user.id
+                    },
+                    select: {
+                        status: true
+                    }
+                }
             }
         })
 
-        return NextResponse.json({ profiles })
+        // Simplify connections in the response
+        const profilesWithConnection = profiles.map(p => ({
+            ...p,
+            connectionStatus: p.receivedConnections[0]?.status || null,
+            receivedConnections: undefined
+        }))
+
+        return NextResponse.json({ profiles: profilesWithConnection })
 
     } catch (error) {
         console.error("Error fetching public profiles:", error)
