@@ -1132,9 +1132,18 @@ export default function Dashboard() {
                             <div className="flex-1 overflow-y-auto pr-2 space-y-2 custom-scrollbar">
                                 {matchedSongs.songs.length > 0 ? (
                                     matchedSongs.songs.map((song, i) => (
-                                        <div key={i} className="p-3 bg-neutral-800/50 border border-neutral-700/30 rounded-xl text-neutral-300 hover:bg-neutral-800 transition-colors">
-                                            {song}
-                                        </div>
+                                        <a
+                                            key={i}
+                                            href={`https://www.youtube.com/results?search_query=${encodeURIComponent(song)}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="block p-3 bg-neutral-800/50 border border-neutral-700/30 rounded-xl text-neutral-300 hover:bg-neutral-800 hover:border-green-500/50 hover:text-white transition-all group"
+                                        >
+                                            <div className="flex justify-between items-center">
+                                                <span>{song}</span>
+                                                <span className="text-[10px] text-neutral-500 group-hover:text-green-500 font-bold uppercase tracking-wider">Play on YouTube ↗</span>
+                                            </div>
+                                        </a>
                                     ))
                                 ) : (
                                     <div className="text-center py-12 text-neutral-500">
