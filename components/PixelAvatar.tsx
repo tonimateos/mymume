@@ -22,6 +22,7 @@ const PixelAvatar: React.FC<PixelAvatarProps> = ({ seed, size = 64, className = 
     const BASE_COLORS = ['#FFDBAC', '#F1C27D', '#E0AC69', '#8D5524', '#C68642'];
     const HAIR_COLORS = ['#090806', '#2C1608', '#4E2708', '#B1B1B1', '#D6B483', '#A56B46'];
     const OUTFIT_COLORS = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'];
+    const GADGET_COLORS = ['#94A3B8', '#475569', '#1E293B', '#F8FAFC', '#DC2626', '#FACC15'];
 
     const layers = useMemo(() => {
         const baseIdx = hash % BASE_COLORS.length;
@@ -30,6 +31,8 @@ const PixelAvatar: React.FC<PixelAvatarProps> = ({ seed, size = 64, className = 
         const hairColorIdx = (hash >> 6) % HAIR_COLORS.length;
         const outfitIdx = (hash >> 8) % 3; // 3 styles
         const outfitColorIdx = (hash >> 10) % OUTFIT_COLORS.length;
+        const gadgetIdx = (hash >> 12) % 5; // 4 types + 1 none
+        const gadgetColorIdx = (hash >> 14) % GADGET_COLORS.length;
 
         return {
             baseColor: BASE_COLORS[baseIdx],
@@ -37,11 +40,13 @@ const PixelAvatar: React.FC<PixelAvatarProps> = ({ seed, size = 64, className = 
             hairIdx,
             hairColor: HAIR_COLORS[hairColorIdx],
             outfitIdx,
-            outfitColor: OUTFIT_COLORS[outfitColorIdx]
+            outfitColor: OUTFIT_COLORS[outfitColorIdx],
+            gadgetIdx,
+            gadgetColor: GADGET_COLORS[gadgetColorIdx]
         };
     }, [hash]);
 
-    const { baseColor, faceIdx, hairIdx, hairColor, outfitIdx, outfitColor } = layers;
+    const { baseColor, faceIdx, hairIdx, hairColor, outfitIdx, outfitColor, gadgetIdx, gadgetColor } = layers;
 
     return (
         <div
@@ -95,6 +100,31 @@ const PixelAvatar: React.FC<PixelAvatarProps> = ({ seed, size = 64, className = 
                 )}
                 {hairIdx === 3 && ( // Mohawkish
                     <path d="M7 2h2v3H7z M6 3h4v1H6z" fill={hairColor} />
+                )}
+
+                {/* MUSIC GADGETS */}
+                {gadgetIdx === 1 && ( // Headphones
+                    <>
+                        <path d="M5 2h6v1H5z" fill={gadgetColor} /> {/* Top band */}
+                        <rect x="4" y="6" width="1" height="3" fill={gadgetColor} /> {/* Left cup */}
+                        <rect x="11" y="6" width="1" height="3" fill={gadgetColor} /> {/* Right cup */}
+                    </>
+                )}
+                {gadgetIdx === 2 && ( // Portable Radio / Boombox
+                    <>
+                        <rect x="1" y="11" width="3" height="3" fill={gadgetColor} /> {/* Body */}
+                        <rect x="1" y="10" width="3" height="1" fill="#000" opacity="0.3" /> {/* Handle */}
+                        <rect x="2" y="12" width="1" height="1" fill="#fff" opacity="0.4" /> {/* Speaker/Dial */}
+                    </>
+                )}
+                {gadgetIdx === 3 && ( // Floating Music Note
+                    <path d="M12 2h2v1h-1v2h1v1h-2V2z" fill={gadgetColor} />
+                )}
+                {gadgetIdx === 4 && ( // Walkman / iPod
+                    <>
+                        <rect x="5" y="11" width="2" height="2" fill={gadgetColor} />
+                        <path d="M6 11h1v1h-1z" fill="#000" opacity="0.2" />
+                    </>
                 )}
             </svg>
 
