@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useSession, signOut } from "next-auth/react"
 import { useSearchParams } from "next/navigation"
 import Image from "next/image"
@@ -96,6 +96,8 @@ export default function Dashboard() {
     // Song Access State
     const [matchedSongs, setMatchedSongs] = useState<{ nickname: string, songs: string[] } | null>(null)
     const [showSongModal, setShowSongModal] = useState(false)
+    const audioRef = useRef<HTMLAudioElement>(null)
+    const [audioEnded, setAudioEnded] = useState(false)
 
     const fetchProfileAndPlaylist = useCallback(async () => {
         setLoading(true)
@@ -433,6 +435,7 @@ export default function Dashboard() {
 
     const handleTestPartEnd = async () => {
         if (!testProfile || testPart === null) {
+            setAudioEnded(true)
             console.log("Song finished (not in test)")
             return
         }
@@ -526,18 +529,6 @@ export default function Dashboard() {
                     MyMuMe
                 </h1>
                 <div className="flex items-center gap-4">
-                    {currentStep >= 5 && (
-                        <button
-                            onClick={() => {
-                                setCurrentStep(6)
-                                setShowMyIdentity(!showMyIdentity)
-                            }}
-                            className={`p-2 rounded-full transition-all transform hover:scale-110 ${showMyIdentity ? 'bg-green-500/20 shadow-[0_0_15px_rgba(34,197,94,0.3)]' : 'bg-neutral-800'}`}
-                            title="See My Identity"
-                        >
-                            <span className="text-xl">👾</span>
-                        </button>
-                    )}
                     {currentStep < 6 && (
                         <span className="text-neutral-400 text-sm hidden md:inline">Step {currentStep} of 6</span>
                     )}
@@ -833,30 +824,15 @@ export default function Dashboard() {
                             <div className="flex justify-center items-center gap-6 mb-8">
                                 {selectedAudioUrl && (
                                     <audio
+                                        ref={audioRef}
                                         src={selectedAudioUrl}
                                         autoPlay
                                         muted={isMuted}
                                         style={{ display: 'none' }}
                                         onEnded={handleTestPartEnd}
+                                        onPlay={() => setAudioEnded(false)}
                                     />
                                 )}
-                                <button
-                                    onClick={() => setIsMuted(!isMuted)}
-                                    className="p-4 bg-neutral-800/50 hover:bg-neutral-800 rounded-full border border-neutral-700 transition-all transform hover:scale-110 flex items-center gap-2 group"
-                                    title={isMuted ? "Unmute" : "Mute"}
-                                >
-                                    {isMuted ? (
-                                        <>
-                                            <span className="text-2xl">🔇</span>
-                                            <span className="text-xs font-bold text-neutral-400 group-hover:text-white transition-colors">OFF</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <span className="text-2xl">🔊</span>
-                                            <span className="text-xs font-bold text-green-500 group-hover:text-green-400 transition-colors">ON</span>
-                                        </>
-                                    )}
-                                </button>
                             </div>
 
                             {showMyIdentity ? (
@@ -865,22 +841,39 @@ export default function Dashboard() {
                                         <h2 className="text-4xl font-black bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
                                             A New Musical Me is Born!
                                         </h2>
-                                        {(country) && (
-                                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-neutral-900 border border-neutral-800 rounded-full text-xs text-neutral-400">
-                                                <span>📍</span> {country}
-                                            </div>
-                                        )}
                                     </div>
-                                    <div className="relative inline-block py-12">
+                                    <div
+                                        className="relative inline-block py-12 cursor-pointer group"
+                                        onClick={() => {
+                                            const audio = audioRef.current
+                                            if (!audio) return
+
+                                            if (audioEnded || audio.paused) {
+                                                audio.currentTime = 0
+                                                audio.play().catch(err => console.error("Play error:", err))
+                                                setAudioEnded(false)
+                                                setIsMuted(false)
+                                            } else {
+                                                setIsMuted(!isMuted)
+                                            }
+                                        }}
+                                    >
                                         {/* The Beast */}
-                                        <div className="relative inline-block filter drop-shadow-[0_0_40px_rgba(34,197,94,0.4)]">
+                                        <div className="relative inline-block filter drop-shadow-[0_0_40px_rgba(34,197,94,0.4)] transition-transform active:scale-95">
                                             <PixelAvatar
                                                 seed={randomSeed}
                                                 size={240}
-                                                className="animate-bounce-slow"
+                                                className={`animate-bounce-slow ${isMuted ? 'grayscale-[0.5] opacity-80' : ''}`}
                                             />
-                                            <div className="absolute top-8 -right-8 animate-pulse text-6xl">🎵</div>
-                                            <div className="absolute bottom-4 -left-12 animate-pulse delay-700 text-6xl">🎶</div>
+                                            <div className="absolute top-8 -right-8 animate-pulse text-6xl">{isMuted ? '💤' : '🎵'}</div>
+                                            <div className="absolute bottom-4 -left-12 animate-pulse delay-700 text-6xl">{isMuted ? '' : '🎶'}</div>
+
+                                            {/* Mute/Unmute Indicator Overlay */}
+                                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                                <div className="bg-black/60 backdrop-blur-md rounded-full p-4 border border-white/20">
+                                                    <span className="text-4xl">{isMuted ? '🔊' : '🔇'}</span>
+                                                </div>
+                                            </div>
                                         </div>
 
                                         {/* Singing Animation Overlay */}
