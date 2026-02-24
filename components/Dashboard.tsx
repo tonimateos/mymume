@@ -1015,13 +1015,23 @@ export default function Dashboard() {
                                                             <span>Explore Sonic Identity</span>
                                                             <span className="opacity-60 group-hover/btn:translate-x-1 transition-transform">→</span>
                                                         </button>
+                                                    ) : profile.connectionStatus === 'negative' ? (
+                                                        <div className="w-full py-2.5 bg-neutral-800/30 text-neutral-500 text-[10px] font-medium rounded-xl border border-neutral-800/50 flex flex-col items-center justify-center gap-1 cursor-not-allowed group/cooldown">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <span className="text-red-500/50">✕</span>
+                                                                <span className="uppercase tracking-widest font-black text-[9px]">Vibe Mismatch</span>
+                                                            </div>
+                                                            <div className="text-[9px] opacity-60 flex items-center gap-1">
+                                                                <span>🕒</span>
+                                                                <span>Next test available in 7 days</span>
+                                                            </div>
+                                                        </div>
                                                     ) : (
                                                         <button
                                                             onClick={() => startCompatibilityTest(profile)}
                                                             className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-white text-xs font-bold rounded-xl transition-colors border border-white/10 flex items-center justify-center gap-2"
                                                         >
                                                             <span>Test Compatibility</span>
-                                                            {profile.connectionStatus === 'negative' && <span className="text-[10px] opacity-40">(Retry)</span>}
                                                         </button>
                                                     )}
                                                 </div>
