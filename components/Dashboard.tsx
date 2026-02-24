@@ -983,30 +983,6 @@ export default function Dashboard() {
                                 </button>
                             </div>
 
-                            <style jsx>{`
-                            @keyframes visualizer {
-                                from { height: 10%; }
-                                to { height: 100%; }
-                            }
-                            .animate-bounce-slow {
-                                animation: bounce 2s infinite;
-                            }
-                            .animate-spin-slow {
-                                animation: spin 10s linear infinite;
-                            }
-                            @keyframes spin {
-                                from { transform: rotate(0deg); }
-                                to { transform: rotate(360deg); }
-                            }
-                            @keyframes ping-slow {
-                                0% { left: -20%; opacity: 0; }
-                                50% { opacity: 1; }
-                                100% { left: 100%; opacity: 0; }
-                            }
-                            .animate-ping-slow {
-                                animation: ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite;
-                            }
-                        `}</style>
                         </div>
                     )
                 }
@@ -1024,7 +1000,7 @@ export default function Dashboard() {
                         <div className="max-w-md w-full text-center space-y-8">
                             <div className="relative flex justify-center items-center gap-8 py-12">
                                 {/* User Mume */}
-                                <div className={`text-8xl transition-all duration-500 ${testPart === 1 ? 'scale-125 filter drop-shadow-[0_0_30px_rgba(34,197,94,0.5)]' : 'opacity-50'}`}>
+                                <div className={`text-8xl transition-all duration-500 ${testPart === 1 ? 'scale-125 filter drop-shadow-[0_0_30px_rgba(34,197,94,0.5)]' : 'opacity-50'} ${testPart !== null && testPart <= 3 ? 'animate-musical-beat' : ''}`}>
                                     👾
                                     <div className="text-xs font-bold text-neutral-500 mt-2 uppercase tracking-widest">You</div>
                                 </div>
@@ -1035,7 +1011,7 @@ export default function Dashboard() {
                                 </div>
 
                                 {/* Target Mume */}
-                                <div className={`text-8xl transition-all duration-500 ${testPart === 2 ? 'scale-125 filter drop-shadow-[0_0_30px_rgba(59,130,246,0.5)]' : 'opacity-50'}`}>
+                                <div className={`text-8xl transition-all duration-500 ${testPart === 2 ? 'scale-125 filter drop-shadow-[0_0_30px_rgba(59,130,246,0.5)]' : 'opacity-50'} ${testPart !== null && testPart <= 3 ? 'animate-musical-beat' : ''}`}>
                                     👤
                                     <div className="text-xs font-bold text-neutral-500 mt-2 uppercase tracking-widest truncate max-w-[80px]">
                                         {testProfile.nickname}
@@ -1086,6 +1062,41 @@ export default function Dashboard() {
                     </div>
                 )}
             </main >
+
+            <style jsx global>{`
+                @keyframes visualizer {
+                    from { height: 40%; }
+                    to { height: 100%; }
+                }
+                .animate-bounce-slow {
+                    animation: bounce 7s infinite;
+                }
+                .animate-spin-slow {
+                    animation: spin 10s linear infinite;
+                }
+                @keyframes spin {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+                @keyframes ping-slow {
+                    0% { left: -20%; opacity: 0; }
+                    50% { opacity: 1; }
+                    100% { left: 100%; opacity: 0; }
+                }
+                .animate-ping-slow {
+                    animation: ping-slow 7s cubic-bezier(0, 0, 0.2, 1) infinite;
+                }
+                @keyframes musical-beat {
+                    0%, 100% { transform: scale(1) translateY(0) rotate(0); }
+                    25% { transform: scale(1.1) translateY(-10px) rotate(-3deg); }
+                    50% { transform: scale(1) translateY(0) rotate(0); }
+                    75% { transform: scale(1.1) translateY(-10px) rotate(3deg); }
+                }
+                .animate-musical-beat {
+                    animation: musical-beat 2.5s ease-in-out infinite;
+                    display: inline-block;
+                }
+            `}</style>
         </div >
     )
 }
