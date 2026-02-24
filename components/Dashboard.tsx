@@ -5,7 +5,6 @@ import { useSession, signOut } from "next-auth/react"
 import { useSearchParams } from "next/navigation"
 import Image from "next/image"
 import PixelAvatar from "./PixelAvatar"
-import AvatarTester from "./AvatarTester"
 
 interface SpotifyPlaylist {
     type: 'spotify'
@@ -1072,10 +1071,7 @@ export default function Dashboard() {
                                         ))}
                                     </div>
 
-                                    {/* Avatar Tester Area */}
-                                    <div className="mt-16 pt-16 border-t border-neutral-800">
-                                        <AvatarTester />
-                                    </div>
+
                                 </div>
                             )}
 
