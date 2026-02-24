@@ -1002,7 +1002,7 @@ export default function Dashboard() {
                                 {/* User Mume */}
                                 <div className={`text-8xl transition-all duration-500 ${testPart === 1 ? 'scale-125 filter drop-shadow-[0_0_30px_rgba(34,197,94,0.5)]' : 'opacity-50'} ${testPart !== null && testPart <= 3 ? 'animate-musical-beat' : ''}`}>
                                     👾
-                                    <div className="text-xs font-bold text-neutral-500 mt-2 uppercase tracking-widest">You</div>
+                                    <div className="text-xs font-bold text-neutral-500 mt-2 uppercase tracking-widest">{nickname}</div>
                                 </div>
 
                                 {/* Connection Lines/Animation */}
@@ -1022,7 +1022,7 @@ export default function Dashboard() {
                             <div className="space-y-4 min-h-[100px] flex flex-col justify-center">
                                 {testPart === 1 && (
                                     <p className="text-xl font-bold animate-pulse text-green-400">
-                                        Your Mume is establishing a musical connection with {testProfile.nickname}...
+                                        {nickname} is establishing a musical connection with {testProfile.nickname}...
                                     </p>
                                 )}
                                 {testPart === 2 && (
@@ -1042,8 +1042,8 @@ export default function Dashboard() {
                                         </h3>
                                         <p className="text-neutral-400 mb-8">
                                             {testOutcome === 'positive'
-                                                ? `The musical vibes between you and ${testProfile.nickname} are perfectly aligned.`
-                                                : `Your musical frequencies aren't quite matching with ${testProfile.nickname} this time.`}
+                                                ? `The musical vibes between ${nickname} and ${testProfile.nickname} are perfectly aligned.`
+                                                : `${nickname}'s musical frequencies aren't quite matching with ${testProfile.nickname} this time.`}
                                         </p>
                                         <button
                                             onClick={() => {
