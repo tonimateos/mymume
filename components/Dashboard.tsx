@@ -558,8 +558,7 @@ export default function Dashboard() {
                                 <div className="absolute right-0 mt-3 w-56 bg-neutral-900 border border-neutral-800 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] z-50 py-2 animate-in fade-in zoom-in-95 duration-200 backdrop-blur-xl">
                                     <button
                                         onClick={() => {
-                                            setCurrentStep(6)
-                                            setShowMyIdentity(true)
+                                            startTransfer()
                                             setIsMenuOpen(false)
                                         }}
                                         className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 transition-colors group"
@@ -889,7 +888,7 @@ export default function Dashboard() {
                                 <div className="space-y-12 animate-in zoom-in duration-500">
                                     <div className="space-y-4">
                                         <h2 className="text-4xl font-black bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
-                                            A New Musical Me is Born!
+                                            A New MuMe is Born!
                                         </h2>
                                     </div>
                                     <div
