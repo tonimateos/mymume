@@ -538,7 +538,9 @@ export default function Dashboard() {
                             <span className="text-xl">👾</span>
                         </button>
                     )}
-                    <span className="text-neutral-400 text-sm hidden md:inline">Step {currentStep} of 6</span>
+                    {currentStep < 6 && (
+                        <span className="text-neutral-400 text-sm hidden md:inline">Step {currentStep} of 6</span>
+                    )}
                     {session?.user?.image && (
                         <Image src={session.user.image} alt="Profile" width={32} height={32} className="rounded-full border border-neutral-700" />
                     )}
