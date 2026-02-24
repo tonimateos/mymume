@@ -32,6 +32,7 @@ export async function GET() {
                 musicIdentity: true,
                 city: true,
                 country: true,
+                mumeSeed: true,
                 receivedConnections: {
                     where: {
                         senderId: session.user.id

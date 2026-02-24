@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json()
-    const { url, text, nickname, voiceType, musicalAttributes } = body
+    const { url, text, nickname, voiceType, musicalAttributes, mumeSeed } = body
 
     // Handle generic profile update
     if (nickname || voiceType) {
@@ -29,7 +29,8 @@ export async function POST(req: Request) {
                 data: {
                     ...(nickname && { nickname }),
                     ...(voiceType && { voiceType }),
-                    ...(musicalAttributes && { musicalAttributes })
+                    ...(musicalAttributes && { musicalAttributes }),
+                    ...(mumeSeed && { mumeSeed })
                 }
             })
             return NextResponse.json({ success: true })
@@ -141,7 +142,8 @@ export async function GET() {
                 voiceType: true,
                 musicalAttributes: true,
                 city: true,
-                country: true
+                country: true,
+                mumeSeed: true
             },
         })
 
@@ -160,6 +162,7 @@ export async function GET() {
             musicIdentity: user.musicIdentity,
             city: user.city,
             country: user.country,
+            mumeSeed: user.mumeSeed,
             isSpotifyConnected: false // Default
         }
 

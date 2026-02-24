@@ -7,6 +7,26 @@ interface PixelAvatarProps {
     className?: string;
 }
 
+const BASE_COLORS = [
+    { main: '#FFDBAC', shadow: '#F1C27D', highlight: '#FFE4C4' },
+    { main: '#F1C27D', shadow: '#E0AC69', highlight: '#F5D0A9' },
+    { main: '#E0AC69', shadow: '#8D5524', highlight: '#E7BD8B' },
+    { main: '#8D5524', shadow: '#5D3A1A', highlight: '#A5734D' },
+    { main: '#C68642', shadow: '#A06E35', highlight: '#D99F66' }
+];
+
+const HAIR_COLORS = [
+    { main: '#090806', shadow: '#000000', highlight: '#2C1608' },
+    { main: '#2C1608', shadow: '#1A0D05', highlight: '#4E2708' },
+    { main: '#B1B1B1', shadow: '#8A8A8A', highlight: '#D6D6D6' },
+    { main: '#D6B483', shadow: '#BFA173', highlight: '#E7D1B1' },
+    { main: '#A56B46', shadow: '#8B5A3E', highlight: '#C48A69' }
+];
+
+const EYE_COLORS = ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444', '#000000'];
+const OUTFIT_COLORS = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'];
+const GADGET_COLORS = ['#94A3B8', '#475569', '#1E293B', '#F8FAFC', '#DC2626', '#FACC15'];
+
 const PixelAvatar: React.FC<PixelAvatarProps> = ({ seed, size = 64, className = "" }) => {
     const hash = useMemo(() => {
         let h = 0;
@@ -17,31 +37,10 @@ const PixelAvatar: React.FC<PixelAvatarProps> = ({ seed, size = 64, className = 
         return Math.abs(h);
     }, [seed]);
 
-    const BASE_COLORS = [
-        { main: '#FFDBAC', shadow: '#F1C27D', highlight: '#FFE4C4' },
-        { main: '#F1C27D', shadow: '#E0AC69', highlight: '#F5D0A9' },
-        { main: '#E0AC69', shadow: '#8D5524', highlight: '#E7BD8B' },
-        { main: '#8D5524', shadow: '#5D3A1A', highlight: '#A5734D' },
-        { main: '#C68642', shadow: '#A06E35', highlight: '#D99F66' }
-    ];
-
-    const HAIR_COLORS = [
-        { main: '#090806', shadow: '#000000', highlight: '#2C1608' },
-        { main: '#2C1608', shadow: '#1A0D05', highlight: '#4E2708' },
-        { main: '#B1B1B1', shadow: '#8A8A8A', highlight: '#D6D6D6' },
-        { main: '#D6B483', shadow: '#BFA173', highlight: '#E7D1B1' },
-        { main: '#A56B46', shadow: '#8B5A3E', highlight: '#C48A69' }
-    ];
-
-    const EYE_COLORS = ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444', '#000000'];
-    const OUTFIT_COLORS = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'];
-    const GADGET_COLORS = ['#94A3B8', '#475569', '#1E293B', '#F8FAFC', '#DC2626', '#FACC15'];
-
     const layers = useMemo(() => {
         const baseIdx = hash % BASE_COLORS.length;
         const eyeIdx = (hash >> 2) % 6;
         const eyeColorIdx = (hash >> 4) % EYE_COLORS.length;
-        const faceIdx = (hash >> 6) % 4;
         const hairIdx = (hash >> 8) % 5;
         const hairColorIdx = (hash >> 10) % HAIR_COLORS.length;
         const outfitIdx = (hash >> 12) % 4;
@@ -53,7 +52,6 @@ const PixelAvatar: React.FC<PixelAvatarProps> = ({ seed, size = 64, className = 
             base: BASE_COLORS[baseIdx],
             eyeIdx,
             eyeColor: EYE_COLORS[eyeColorIdx],
-            faceIdx,
             hairIdx,
             hair: HAIR_COLORS[hairColorIdx],
             outfitIdx,
@@ -63,7 +61,7 @@ const PixelAvatar: React.FC<PixelAvatarProps> = ({ seed, size = 64, className = 
         };
     }, [hash]);
 
-    const { base, eyeIdx, eyeColor, faceIdx, hairIdx, hair, outfitIdx, outfitColor, gadgetIdx, gadgetColor } = layers;
+    const { base, eyeIdx, eyeColor, hairIdx, hair, outfitIdx, outfitColor, gadgetIdx, gadgetColor } = layers;
 
     return (
         <div
@@ -216,7 +214,7 @@ const PixelAvatar: React.FC<PixelAvatarProps> = ({ seed, size = 64, className = 
                 {outfitIdx === 3 && ( // HD Tech Scarf
                     <>
                         <path d="M22 32h20v14H22z" fill={outfitColor} />
-                        <path d="M22 32h20v5H22z" fill={outfitColor} brightness="1.2" />
+                        <path d="M22 32h20v5H22z" fill="#fff" opacity="0.2" />
                         <path d="M22 32h20v1H22z" fill="#fff" opacity="0.2" />
                         <path d="M22 36h20v1H22z" fill="#000" opacity="0.1" />
                     </>

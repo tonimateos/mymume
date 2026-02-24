@@ -42,6 +42,7 @@ interface UserProfile {
     musicalAttributes: string | null
     city: string | null
     country: string | null
+    mumeSeed?: string | null
     connectionStatus?: string | null
 }
 
@@ -142,10 +143,9 @@ export default function Dashboard() {
                     else if (!data.content && !data.id && !data.url) setCurrentStep(3) // No playlist
                     else if (!data.musicIdentity) setCurrentStep(4) // Has playlist, needs analysis
                     else setCurrentStep(6) // Done - Go straight to Feed
+
+                    if (data.mumeSeed) setRandomSeed(data.mumeSeed)
                 }
-            } else {
-                const errorData = await res.json().catch(() => ({}))
-                setError(errorData.error || `Failed to fetch profile (Status: ${res.status})`)
             }
         } catch (err) {
             console.error("Fetch error:", err)
@@ -196,7 +196,10 @@ export default function Dashboard() {
             await fetch("/api/playlist", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ nickname })
+                body: JSON.stringify({
+                    nickname,
+                    mumeSeed: randomSeed
+                })
             })
             setCurrentStep(2)
         } catch {
@@ -245,6 +248,7 @@ export default function Dashboard() {
                 setCountry(null)
                 setVoiceType(null)
                 setSelectedAttributes([])
+                setRandomSeed(session?.user?.id || Math.random().toString(36).substring(7))
                 setPlaylist(null)
                 setUrl("")
                 setTextInput("")
@@ -558,7 +562,7 @@ export default function Dashboard() {
                         >
                             <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                             <PixelAvatar
-                                seed={nickname.trim() || randomSeed}
+                                seed={randomSeed}
                                 size={160}
                                 className="drop-shadow-[0_0_20px_rgba(34,197,94,0.3)] group-hover:scale-110 transition-transform duration-300"
                             />
@@ -995,7 +999,7 @@ export default function Dashboard() {
                                                 <div className="flex gap-4 items-start relative z-10 text-left">
                                                     <div className="relative shrink-0">
                                                         <PixelAvatar
-                                                            seed={profile.id}
+                                                            seed={profile.mumeSeed || profile.id}
                                                             size={56}
                                                             className="rounded-2xl border border-neutral-700/50 shadow-inner"
                                                         />
@@ -1094,7 +1098,7 @@ export default function Dashboard() {
                             <div className="relative flex justify-center items-center gap-8 py-12">
                                 {/* User Mume */}
                                 <div className={`transition-all duration-500 ${testPart === 1 ? 'scale-125 filter drop-shadow-[0_0_30px_rgba(34,197,94,0.5)]' : 'opacity-50'}`}>
-                                    <PixelAvatar seed={session?.user?.id || 'me'} size={128} />
+                                    <PixelAvatar seed={randomSeed || session?.user?.id || 'me'} size={128} />
                                     <div className="text-xs font-bold text-neutral-500 mt-2 uppercase tracking-widest">{nickname}</div>
                                 </div>
 
@@ -1105,7 +1109,7 @@ export default function Dashboard() {
 
                                 {/* Target Mume */}
                                 <div className={`transition-all duration-500 ${testPart === 2 ? 'scale-125 filter drop-shadow-[0_0_30px_rgba(59,130,246,0.5)]' : 'opacity-50'}`}>
-                                    <PixelAvatar seed={testProfile.id} size={128} />
+                                    <PixelAvatar seed={testProfile.mumeSeed || testProfile.id} size={128} />
                                     <div className="text-xs font-bold text-neutral-500 mt-2 uppercase tracking-widest truncate max-w-[80px]">
                                         {testProfile.nickname}
                                     </div>

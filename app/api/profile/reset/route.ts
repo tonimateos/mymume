@@ -25,6 +25,7 @@ export async function POST() {
                 playlistUrl: null,
                 playlistText: null,
                 musicIdentity: null,
+                mumeSeed: null,
                 sourceType: "spotify_url" // Default value
             }
         })

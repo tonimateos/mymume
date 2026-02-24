@@ -58,6 +58,7 @@ model User {
   musicalAttributes String? // JSON string or comma-separated list
   city          String?
   country       String?
+  mumeSeed      String?
   
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
