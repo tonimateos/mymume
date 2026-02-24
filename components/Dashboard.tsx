@@ -86,7 +86,6 @@ export default function Dashboard() {
     const [isMuted, setIsMuted] = useState(false)
     const [selectedAudioUrl, setSelectedAudioUrl] = useState("")
     const [showMyIdentity, setShowMyIdentity] = useState(false)
-    const [showFullAnalysis, setShowFullAnalysis] = useState(false)
 
     // Compatibility Test State
     const [testProfile, setTestProfile] = useState<UserProfile | null>(null)
@@ -98,6 +97,7 @@ export default function Dashboard() {
     const [showSongModal, setShowSongModal] = useState(false)
     const audioRef = useRef<HTMLAudioElement>(null)
     const [audioEnded, setAudioEnded] = useState(false)
+    const [isMenuOpen, setIsMenuOpen] = useState(false)
 
     const fetchProfileAndPlaylist = useCallback(async () => {
         setLoading(true)
@@ -254,7 +254,6 @@ export default function Dashboard() {
                 setUrl("")
                 setTextInput("")
                 setShowMyIdentity(false)
-                setShowFullAnalysis(false)
                 setError("")
             } else {
                 const data = await res.json()
@@ -528,14 +527,63 @@ export default function Dashboard() {
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
                     MyMuMe
                 </h1>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 relative">
                     {currentStep < 6 && (
                         <span className="text-neutral-400 text-sm hidden md:inline">Step {currentStep} of 6</span>
                     )}
-                    {session?.user?.image && (
-                        <Image src={session.user.image} alt="Profile" width={32} height={32} className="rounded-full border border-neutral-700" />
-                    )}
-                    <button onClick={() => signOut()} className="text-sm text-neutral-400 hover:text-white transition-colors">Sign out</button>
+
+                    {/* Profile Menu Trigger */}
+                    <div className="relative">
+                        <button
+                            onClick={() => setIsMenuOpen(!isMenuOpen)}
+                            className="flex items-center gap-2 p-1.5 bg-neutral-900 border border-neutral-800 rounded-full hover:bg-neutral-800 transition-all active:scale-95 group shadow-lg"
+                        >
+                            <div className="relative w-8 h-8 rounded-full overflow-hidden border border-neutral-700/50 bg-black/40">
+                                <PixelAvatar seed={randomSeed || session?.user?.id || 'me'} size={32} className="relative z-10" />
+                            </div>
+                            <span className="text-sm font-bold text-neutral-400 mr-2 group-hover:text-white transition-colors hidden sm:inline">
+                                {nickname || "Menu"}
+                            </span>
+                        </button>
+
+                        {/* Dropdown Menu */}
+                        {isMenuOpen && (
+                            <>
+                                <div
+                                    className="fixed inset-0 z-40"
+                                    onClick={() => setIsMenuOpen(false)}
+                                ></div>
+                                <div className="absolute right-0 mt-3 w-56 bg-neutral-900 border border-neutral-800 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] z-50 py-2 animate-in fade-in zoom-in-95 duration-200 backdrop-blur-xl">
+                                    <button
+                                        onClick={() => {
+                                            setCurrentStep(6)
+                                            setShowMyIdentity(true)
+                                            setIsMenuOpen(false)
+                                        }}
+                                        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 transition-colors group"
+                                    >
+                                        <span className="text-lg group-hover:scale-110 transition-transform">👾</span>
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-bold text-white">My Profile</span>
+                                            <span className="text-[10px] text-neutral-500">View your musical identity</span>
+                                        </div>
+                                    </button>
+
+                                    <div className="h-px bg-neutral-800 my-1 mx-2"></div>
+
+                                    <button
+                                        onClick={() => signOut()}
+                                        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-red-500/10 transition-colors group"
+                                    >
+                                        <span className="text-lg group-hover:scale-110 transition-transform">🚪</span>
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-bold text-red-400">Sign Out</span>
+                                        </div>
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
                 </div>
             </header>
 
@@ -880,19 +928,11 @@ export default function Dashboard() {
                                         <div className="absolute -inset-12 border-8 border-dashed border-green-500/20 rounded-full animate-spin-slow"></div>
                                     </div>
 
-                                    {/* Analysis Result (Icon Triggered) */}
-                                    <div className={`transition-all duration-700 ease-in-out overflow-hidden mx-auto ${showFullAnalysis ? 'max-h-[4000px] opacity-100 mt-8' : 'max-h-0 opacity-0 mt-0'}`}>
+                                    {/* Analysis Result (Permanently Visible) */}
+                                    <div className="mx-auto mt-8 opacity-100">
                                         <div className="bg-neutral-900/50 border border-neutral-800 rounded-3xl p-8 backdrop-blur-md max-w-xl mx-auto text-left shadow-2xl">
-                                            <div className="flex justify-between items-start mb-6">
-                                                <div>
-                                                    <h3 className="text-lg font-bold text-white mb-1">Musical Profile</h3>
-                                                </div>
-                                                <button
-                                                    onClick={() => setShowFullAnalysis(false)}
-                                                    className="text-neutral-500 hover:text-white transition-colors"
-                                                >
-                                                    ✕
-                                                </button>
+                                            <div className="mb-6">
+                                                <h3 className="text-lg font-bold text-white mb-1">Musical Profile</h3>
                                             </div>
 
                                             <p className="text-neutral-300 text-sm mb-6 pb-4 border-b border-white/5">
@@ -930,28 +970,9 @@ export default function Dashboard() {
                                                     })()
                                                 )}
                                             </div>
-
-                                            <button
-                                                onClick={() => setShowFullAnalysis(false)}
-                                                className="mt-8 w-full py-3 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-xl transition-colors text-xs font-bold"
-                                            >
-                                                Close Analysis
-                                            </button>
                                         </div>
                                     </div>
 
-                                    {!showFullAnalysis && (
-                                        <div className="mt-8 flex flex-col items-center gap-2 animate-in fade-in duration-1000">
-                                            <button
-                                                onClick={() => setShowFullAnalysis(true)}
-                                                className="w-14 h-14 bg-neutral-900 border border-neutral-800 rounded-full flex items-center justify-center text-2xl hover:border-green-500/50 hover:bg-neutral-800 transition-all transform hover:scale-110 shadow-lg shadow-black/50 group"
-                                                title="View Full Analysis"
-                                            >
-                                                <span className="group-hover:animate-pulse">📝</span>
-                                            </button>
-                                            <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Profile Details</span>
-                                        </div>
-                                    )}
 
                                     <button
                                         onClick={() => setShowMyIdentity(false)}
