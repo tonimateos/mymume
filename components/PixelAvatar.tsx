@@ -17,26 +17,46 @@ const PixelAvatar: React.FC<PixelAvatarProps> = ({ seed, size = 64, className = 
         return Math.abs(h);
     }, [seed]);
 
-    const BASE_COLORS = ['#FFDBAC', '#F1C27D', '#E0AC69', '#8D5524', '#C68642'];
-    const HAIR_COLORS = ['#090806', '#2C1608', '#4E2708', '#B1B1B1', '#D6B483', '#A56B46'];
+    const BASE_COLORS = [
+        { main: '#FFDBAC', shadow: '#F1C27D' },
+        { main: '#F1C27D', shadow: '#E0AC69' },
+        { main: '#E0AC69', shadow: '#8D5524' },
+        { main: '#8D5524', shadow: '#5D3A1A' },
+        { main: '#C68642', shadow: '#A06E35' }
+    ];
+
+    const HAIR_COLORS = [
+        { main: '#090806', light: '#2C1608' }, // blackish
+        { main: '#2C1608', light: '#4E2708' }, // brown
+        { main: '#B1B1B1', light: '#D6D6D6' }, // grey
+        { main: '#D6B483', light: '#E7D1B1' }, // blonde
+        { main: '#A56B46', light: '#C48A69' }, // ginger
+        { main: '#5D3A1A', light: '#7A4D23' }  // dark brown
+    ];
+
+    const EYE_COLORS = ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444', '#000000'];
     const OUTFIT_COLORS = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'];
     const GADGET_COLORS = ['#94A3B8', '#475569', '#1E293B', '#F8FAFC', '#DC2626', '#FACC15'];
 
     const layers = useMemo(() => {
         const baseIdx = hash % BASE_COLORS.length;
-        const faceIdx = (hash >> 2) % 4;
-        const hairIdx = (hash >> 4) % 4;
-        const hairColorIdx = (hash >> 6) % HAIR_COLORS.length;
-        const outfitIdx = (hash >> 8) % 3;
-        const outfitColorIdx = (hash >> 10) % OUTFIT_COLORS.length;
-        const gadgetIdx = (hash >> 12) % 5;
-        const gadgetColorIdx = (hash >> 14) % GADGET_COLORS.length;
+        const eyeIdx = (hash >> 2) % 6;
+        const eyeColorIdx = (hash >> 4) % EYE_COLORS.length;
+        const faceIdx = (hash >> 6) % 4;
+        const hairIdx = (hash >> 8) % 5;
+        const hairColorIdx = (hash >> 10) % HAIR_COLORS.length;
+        const outfitIdx = (hash >> 12) % 4;
+        const outfitColorIdx = (hash >> 14) % OUTFIT_COLORS.length;
+        const gadgetIdx = (hash >> 16) % 6;
+        const gadgetColorIdx = (hash >> 18) % GADGET_COLORS.length;
 
         return {
-            baseColor: BASE_COLORS[baseIdx],
+            base: BASE_COLORS[baseIdx],
+            eyeIdx,
+            eyeColor: EYE_COLORS[eyeColorIdx],
             faceIdx,
             hairIdx,
-            hairColor: HAIR_COLORS[hairColorIdx],
+            hair: HAIR_COLORS[hairColorIdx],
             outfitIdx,
             outfitColor: OUTFIT_COLORS[outfitColorIdx],
             gadgetIdx,
@@ -44,7 +64,7 @@ const PixelAvatar: React.FC<PixelAvatarProps> = ({ seed, size = 64, className = 
         };
     }, [hash]);
 
-    const { baseColor, faceIdx, hairIdx, hairColor, outfitIdx, outfitColor, gadgetIdx, gadgetColor } = layers;
+    const { base, eyeIdx, eyeColor, faceIdx, hairIdx, hair, outfitIdx, outfitColor, gadgetIdx, gadgetColor } = layers;
 
     return (
         <div
@@ -56,83 +76,178 @@ const PixelAvatar: React.FC<PixelAvatarProps> = ({ seed, size = 64, className = 
                 className="w-full h-full animate-bob-pixelated"
                 xmlns="http://www.w3.org/2000/svg"
             >
-                {/* BODY / BASE (Higher Rez 32x32) */}
-                <path d="M10 8h12v18H10z" fill={baseColor} /> {/* Torso */}
-                <path d="M11 26h3v4h-3z" fill={baseColor} /> {/* Left Leg */}
-                <path d="M18 26h3v4h-3z" fill={baseColor} /> {/* Right Leg */}
-                <path d="M8 10h2v8H8z" fill={baseColor} opacity="0.9" /> {/* Left Arm */}
-                <path d="M22 10h2v8h-2z" fill={baseColor} opacity="0.9" /> {/* Right Arm */}
+                {/* BODY SHADOW */}
+                <path d="M10 8h12v18H10z" fill={base.shadow} />
+                <path d="M11 26h3v4h-3z M18 26h3v4h-3z" fill={base.shadow} />
 
-                {/* OUTFIT (32x32) */}
-                {outfitIdx === 0 && ( // T-Shirt
-                    <path d="M10 20h12v6H10z M8 10h2v4H8z M22 10h2v4h-2z" fill={outfitColor} />
-                )}
-                {outfitIdx === 1 && ( // Hoodie with Detail
+                {/* BODY MAIN */}
+                <path d="M11 8h10v18H11z" fill={base.main} />
+                <path d="M11 26h2v3h-2z M18 26h2v3h-2z" fill={base.main} />
+
+                {/* ARMS */}
+                <path d="M8 10h2v8H8z" fill={base.main} />
+                <path d="M22 10h2v8h-2z" fill={base.main} />
+                <path d="M8 10h1v8h-1z" fill={base.shadow} opacity="0.4" />
+                <path d="M23 10h1v8h-1z" fill={base.shadow} opacity="0.4" />
+
+                {/* OUTFIT */}
+                {outfitIdx === 0 && ( // T-Shirt with highlights
                     <>
-                        <path d="M10 18h12v8H10z M8 10h2v6H8z M22 10h2v6h-2z" fill={outfitColor} />
-                        <path d="M15 18h2v4h-2z" fill="#000" opacity="0.1" /> {/* Zip/Detail */}
+                        <path d="M10 20h12v6H10z" fill={outfitColor} />
+                        <path d="M8 10h2v4H8z M22 10h2v4h-2z" fill={outfitColor} />
+                        <path d="M10 20h12v1H10z" fill="#fff" opacity="0.1" />
                     </>
                 )}
-                {outfitIdx === 2 && ( // Overall / Jacket
+                {outfitIdx === 1 && ( // Hoodie with depth
                     <>
                         <path d="M10 18h12v8H10z" fill={outfitColor} />
-                        <path d="M11 18h1v8h-1z M20 18h1v8h-1z" fill="#000" opacity="0.15" /> {/* Straps */}
+                        <path d="M8 10h2v6H8z M22 10h2v6h-2z" fill={outfitColor} />
+                        <path d="M15 18h2v8h-2z" fill="#000" opacity="0.1" /> {/* Zip line */}
+                        <path d="M14 18h4v1h-4z" fill="#fff" opacity="0.1" /> {/* Shoulder light */}
+                    </>
+                )}
+                {outfitIdx === 2 && ( // Overall / Techwear
+                    <>
+                        <path d="M10 18h12v8H10z" fill={outfitColor} />
+                        <path d="M10 18h1v8h-1z M21 18h1v8h-1z" fill="#000" opacity="0.2" /> {/* Side straps */}
+                        <path d="M13 21h6v2h-6z" fill="#000" opacity="0.1" /> {/* Pocket detail */}
+                    </>
+                )}
+                {outfitIdx === 3 && ( // Scarf / High Collar
+                    <>
+                        <path d="M10 18h12v8H10z" fill={outfitColor} />
+                        <path d="M10 16h12v3H10z" fill={outfitColor} /> {/* Extra collar height */}
+                        <path d="M10 16h12v1H10z" fill="#fff" opacity="0.1" />
                     </>
                 )}
 
-                {/* FACE (32x32) */}
-                {/* Eyes - with pupils now */}
-                <rect x="13" y="13" width="2" height="2" fill="#fff" />
-                <rect x="17" y="13" width="2" height="2" fill="#fff" />
-                <rect x="14" y="14" width="1" height="1" fill="#000" />
-                <rect x="18" y="14" width="1" height="1" fill="#000" />
-
-                {/* Mouth */}
-                {faceIdx === 0 && <path d="M15 18h2v1h-2z" fill="#000" opacity="0.4" />}
-                {faceIdx === 1 && <path d="M14 18h1v1h2v-1h1v2h-4z" fill="#000" opacity="0.5" />}
-                {faceIdx === 2 && <path d="M14 19h4v1h-4z" fill="#000" opacity="0.3" />}
-                {faceIdx === 3 && <path d="M16 18h2v1h-2z" fill="#000" opacity="0.4" />}
-
-                {/* HAIR (32x32) */}
-                {hairIdx === 0 && ( // Short/Spiky
-                    <path d="M10 6h12v3H10z M11 5h1v1h-1z M14 5h1v1h-1z M17 5h1v1h-1z M20 5h1v1h-1z" fill={hairColor} />
-                )}
-                {hairIdx === 1 && ( // Long
-                    <path d="M10 6h12v3H10z M10 9h2v8h-2z M20 9h2v8h-2z" fill={hairColor} />
-                )}
-                {hairIdx === 2 && ( // Pompadour/Volume
-                    <path d="M10 4h12v5H10z M11 3h10v1H11z" fill={hairColor} />
-                )}
-                {hairIdx === 3 && ( // Beanie/Cap
-                    <path d="M10 6h12v4H10z" fill={hairColor} />
-                )}
-
-                {/* MUSIC GADGETS (32x32) */}
-                {gadgetIdx === 1 && ( // Headphones
+                {/* EYES LAYER [NEW] */}
+                {eyeIdx === 0 && ( // Normal Detailed
                     <>
-                        <path d="M11 5h10v2h-10z" fill={gadgetColor} /> {/* Band */}
-                        <path d="M10 12h3v6h-3z M19 12h3v6h-3z" fill={gadgetColor} /> {/* Cups */}
+                        <rect x="12" y="12" width="3" height="3" fill="#fff" />
+                        <rect x="17" y="12" width="3" height="3" fill="#fff" />
+                        <rect x="13" y="13" width="2" height="2" fill={eyeColor} />
+                        <rect x="18" y="13" width="2" height="2" fill={eyeColor} />
+                        <rect x="14" y="13" width="1" height="1" fill="#fff" opacity="0.6" />
+                        <rect x="19" y="13" width="1" height="1" fill="#fff" opacity="0.6" />
                     </>
                 )}
-                {gadgetIdx === 2 && ( // Retro Boombox
+                {eyeIdx === 1 && ( // Winking
                     <>
-                        <path d="M2 22h8v8H2z" fill={gadgetColor} />
-                        <rect x="3" y="24" width="2" height="2" rx="1" fill="#000" opacity="0.4" /> {/* Speaker L */}
-                        <rect x="7" y="24" width="2" height="2" rx="1" fill="#000" opacity="0.4" /> {/* Speaker R */}
-                        <path d="M4 21h4v1H4z" fill="#000" opacity="0.2" /> {/* Handle */}
+                        <rect x="12" y="12" width="3" height="3" fill="#fff" />
+                        <path d="M17 14h3v1h-3z" fill="#000" opacity="0.5" /> {/* Closed eye */}
+                        <rect x="13" y="13" width="2" height="2" fill={eyeColor} />
+                        <rect x="14" y="13" width="1" height="1" fill="#fff" opacity="0.6" />
                     </>
                 )}
-                {gadgetIdx === 3 && ( // Floating Music Notes
+                {eyeIdx === 2 && ( // Sunglasses
                     <>
-                        <path d="M24 6h4v2h-2v4h2v2h-4V6z" fill={gadgetColor} opacity="0.8" />
-                        <path d="M4 4h2v1h-1v2h1v1H4V4z" fill={gadgetColor} opacity="0.6" />
+                        <path d="M11 12h10v4H11z" fill="#1e1e1e" />
+                        <path d="M11 12h10v1H11z" fill="#fff" opacity="0.1" /> {/* Shine */}
+                        <path d="M12 13h3v2h-3z M17 13h3v2h-3z" fill="#000" /> {/* Lens depth */}
                     </>
                 )}
-                {gadgetIdx === 4 && ( // Portable Player
+                {eyeIdx === 3 && ( // Robot / Cyber
                     <>
-                        <path d="M14 22h4v7h-4z" fill={gadgetColor} />
-                        <rect x="15" y="23" width="2" height="2" fill="#fff" opacity="0.3" /> {/* Screen */}
-                        <circle cx="16" cy="27" r="1.5" fill="#000" opacity="0.2" /> {/* Wheel */}
+                        <rect x="12" y="13" width="3" height="2" fill={eyeColor} fillOpacity="0.3" />
+                        <rect x="17" y="13" width="3" height="2" fill={eyeColor} fillOpacity="0.3" />
+                        <rect x="13" y="13" width="1" height="1" fill={eyeColor} />
+                        <rect x="18" y="13" width="1" height="1" fill={eyeColor} />
+                        <rect x="11" y="14" width="10" height="1" fill={eyeColor} opacity="0.2" /> {/* Scanner line */}
+                    </>
+                )}
+                {eyeIdx === 4 && ( // Angry / Determined
+                    <>
+                        <path d="M12 11l3 1v2h-3z M17 12l3-1v3h-3z" fill="#fff" />
+                        <path d="M11 11l4 1 M17 12l4-1" stroke="#000" strokeWidth="1" strokeOpacity="0.4" /> {/* Eyebrows */}
+                        <rect x="13" y="13" width="1" height="1" fill={eyeColor} />
+                        <rect x="18" y="13" width="1" height="1" fill={eyeColor} />
+                    </>
+                )}
+                {eyeIdx === 5 && ( // Sleepy / Bored
+                    <>
+                        <rect x="12" y="13" width="3" height="1" fill="#fff" />
+                        <rect x="17" y="13" width="3" height="1" fill="#fff" />
+                        <rect x="13" y="13" width="1" height="1" fill={eyeColor} />
+                        <rect x="18" y="13" width="1" height="1" fill={eyeColor} />
+                        <path d="M12 12h3v1h-3z M17 12h3v1h-3z" fill="#000" opacity="0.2" /> {/* Lids */}
+                    </>
+                )}
+
+                {/* FACE (Mouths) */}
+                {faceIdx === 0 && <path d="M14 20h4v1h-4z" fill="#000" opacity="0.3" />} {/* Neutral */}
+                {faceIdx === 1 && <path d="M13 20h1v1h4v-1h1v2h-6z" fill="#000" opacity="0.4" />} {/* Big Smile */}
+                {faceIdx === 2 && <path d="M15 20h2v1h-2z" fill="#000" opacity="0.5" />} {/* Small mouth */}
+                {faceIdx === 3 && <path d="M14 21h4v1h-4z" fill="#000" opacity="0.2" />} {/* Lower mouth */}
+
+                {/* HAIR */}
+                {hairIdx === 0 && ( // Spiky with highlights
+                    <>
+                        <path d="M10 6h12v5H10z" fill={hair.main} />
+                        <path d="M11 5h2v1h-2z M15 5h2v1h-2z M19 5h2v1h-2z" fill={hair.light} />
+                    </>
+                )}
+                {hairIdx === 1 && ( // Long Flowing
+                    <>
+                        <path d="M10 6h12v4H10z" fill={hair.main} />
+                        <path d="M9 10h2v10H9z M21 10h2v10h-2z" fill={hair.main} />
+                        <path d="M11 6h10v1H11z" fill={hair.light} opacity="0.3" />
+                    </>
+                )}
+                {hairIdx === 2 && ( // Afro / Volume
+                    <>
+                        <circle cx="16" cy="11" r="7" fill={hair.main} />
+                        <circle cx="16" cy="11" r="5" fill={hair.light} opacity="0.1" />
+                    </>
+                )}
+                {hairIdx === 3 && ( // Side swept
+                    <>
+                        <path d="M9 6h14v4H9z" fill={hair.main} />
+                        <path d="M9 10h4v5H9z" fill={hair.main} />
+                        <path d="M14 6h9v1h-9z" fill={hair.light} opacity="0.4" />
+                    </>
+                )}
+                {hairIdx === 4 && ( // Top-knot / Mohawk
+                    <>
+                        <path d="M14 2h4v8h-4z" fill={hair.main} />
+                        <path d="M13 10h6v1h-6z" fill={hair.main} />
+                        <path d="M15 2h2v4h-2z" fill={hair.light} opacity="0.3" />
+                    </>
+                )}
+
+                {/* GADGETS */}
+                {gadgetIdx === 1 && ( // Tech Headphones
+                    <>
+                        <path d="M10 5h12v2h-12z" fill={gadgetColor} />
+                        <path d="M8 12h3v7H8z M21 12h3v7h-3z" fill={gadgetColor} />
+                        <path d="M8 13h1v5H8z M23 13h1v5h-1z" fill="#fff" opacity="0.2" />
+                    </>
+                )}
+                {gadgetIdx === 2 && ( // Shoulder Radio
+                    <>
+                        <path d="M3 21h7v8H3z" fill={gadgetColor} />
+                        <rect x="4" y="23" width="2" height="2" fill="#000" opacity="0.3" />
+                        <rect x="7" y="23" width="2" height="2" fill="#000" opacity="0.3" />
+                        <path d="M4 20h5v1H4z" fill="#000" opacity="0.2" />
+                    </>
+                )}
+                {gadgetIdx === 3 && ( // Musical Core (Glowing Note)
+                    <>
+                        <path d="M25 5h4v2h-2v4h2v2h-4V5z" fill={gadgetColor} className="animate-pulse" />
+                        <path d="M26 6h1v1h-1z" fill="#fff" opacity="0.5" />
+                    </>
+                )}
+                {gadgetIdx === 4 && ( // Data Watch / Pip-boy style
+                    <>
+                        <rect x="22" y="14" width="3" height="4" fill={gadgetColor} />
+                        <rect x="23" y="15" width="1" height="2" fill="#4ade80" />
+                    </>
+                )}
+                {gadgetIdx === 5 && ( // Floating Synth Cubes
+                    <>
+                        <rect x="4" y="4" width="2" height="2" fill={gadgetColor} />
+                        <rect x="26" y="20" width="2" height="2" fill={gadgetColor} />
+                        <rect x="4" y="24" width="2" height="2" fill={gadgetColor} opacity="0.5" />
                     </>
                 )}
             </svg>
