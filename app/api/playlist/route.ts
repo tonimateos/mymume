@@ -143,7 +143,8 @@ export async function GET() {
                 musicalAttributes: true,
                 city: true,
                 country: true,
-                mumeSeed: true
+                mumeSeed: true,
+                createdAt: true
             },
         })
 
@@ -163,6 +164,7 @@ export async function GET() {
             city: user.city,
             country: user.country,
             mumeSeed: user.mumeSeed,
+            createdAt: user.createdAt,
             isSpotifyConnected: false // Default
         }
 

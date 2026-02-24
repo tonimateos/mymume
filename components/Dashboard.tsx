@@ -98,6 +98,7 @@ export default function Dashboard() {
     const audioRef = useRef<HTMLAudioElement>(null)
     const [audioEnded, setAudioEnded] = useState(false)
     const [isMenuOpen, setIsMenuOpen] = useState(false)
+    const [createdAt, setCreatedAt] = useState<string | null>(null)
 
     const fetchProfileAndPlaylist = useCallback(async () => {
         setLoading(true)
@@ -146,6 +147,7 @@ export default function Dashboard() {
                     else setCurrentStep(6) // Done - Go straight to Feed
 
                     if (data.mumeSeed) setRandomSeed(data.mumeSeed)
+                    if (data.createdAt) setCreatedAt(data.createdAt)
                 }
             }
         } catch (err) {
@@ -932,7 +934,12 @@ export default function Dashboard() {
                                     <div className="mx-auto mt-8 opacity-100">
                                         <div className="bg-neutral-900/50 border border-neutral-800 rounded-3xl p-8 backdrop-blur-md max-w-xl mx-auto text-left shadow-2xl">
                                             <div className="mb-6">
-                                                <h3 className="text-lg font-bold text-white mb-1 uppercase tracking-wider">{nickname}</h3>
+                                                <h3 className="text-lg font-bold text-white mb-0 uppercase tracking-wider">{nickname}</h3>
+                                                {createdAt && (
+                                                    <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest block mt-1">
+                                                        Born: {new Date(createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}
+                                                    </span>
+                                                )}
                                             </div>
 
                                             <p className="text-neutral-300 text-sm mb-6 pb-4 border-b border-white/5">
