@@ -716,8 +716,12 @@ export default function Dashboard() {
                 {
                     currentStep === 4 && (
                         <div className="text-center space-y-8 animate-in fade-in zoom-in duration-500">
-                            <div className="w-24 h-24 bg-gradient-to-tr from-purple-500 to-indigo-500 rounded-full mx-auto flex items-center justify-center shadow-lg shadow-purple-500/30">
-                                <span className="text-4xl">🔮</span>
+                            <div className="flex justify-center mb-8">
+                                <PixelAvatar
+                                    seed={randomSeed}
+                                    size={96}
+                                    className="drop-shadow-[0_0_20px_rgba(34,197,94,0.3)] animate-pulse"
+                                />
                             </div>
                             <div>
                                 <p className="text-neutral-400">We found <strong>{playlist?.type === 'spotify' && playlist.tracks ? playlist.tracks.total : (playlist?.content?.split('\n').length || 0)}</strong> songs.</p>
@@ -868,8 +872,12 @@ export default function Dashboard() {
                                     </div>
                                     <div className="relative inline-block py-12">
                                         {/* The Beast */}
-                                        <div className="text-[14rem] leading-none animate-bounce-slow relative inline-block filter drop-shadow-[0_0_40px_rgba(255,255,255,0.4)] md:text-[18rem]">
-                                            👾
+                                        <div className="relative inline-block filter drop-shadow-[0_0_40px_rgba(34,197,94,0.4)]">
+                                            <PixelAvatar
+                                                seed={randomSeed}
+                                                size={240}
+                                                className="animate-bounce-slow"
+                                            />
                                             <div className="absolute top-8 -right-8 animate-pulse text-6xl">🎵</div>
                                             <div className="absolute bottom-4 -left-12 animate-pulse delay-700 text-6xl">🎶</div>
                                         </div>
