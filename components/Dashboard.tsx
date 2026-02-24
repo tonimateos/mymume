@@ -981,18 +981,26 @@ export default function Dashboard() {
                                     </div>
 
 
-                                    <button
-                                        onClick={() => setShowMyIdentity(false)}
-                                        className="px-6 py-3 bg-neutral-800 text-white rounded-full hover:bg-neutral-700 transition-all font-bold"
-                                    >
-                                        Back to Feed
-                                    </button>
+                                    <div className="flex flex-col items-center gap-4 mt-12 pb-8">
+                                        <button
+                                            onClick={() => setShowMyIdentity(false)}
+                                            className="w-full max-w-xs px-8 py-3 bg-neutral-800 text-white rounded-full hover:bg-neutral-700 transition-all font-bold"
+                                        >
+                                            The MuMe Collective
+                                        </button>
+                                        <button
+                                            onClick={handleStartOver}
+                                            className="w-full max-w-xs px-8 py-2 bg-transparent text-red-500/50 hover:text-red-500 transition-all font-bold text-[10px] uppercase tracking-widest mt-4"
+                                        >
+                                            Dangerous: Delete Profile
+                                        </button>
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                     <div className="text-center">
                                         <h2 className="text-3xl font-black bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent mb-2">
-                                            MuME Collective
+                                            MuMe Collective
                                         </h2>
                                         <p className="text-neutral-400">Connect with other unique musical identities</p>
                                     </div>
@@ -1098,14 +1106,6 @@ export default function Dashboard() {
                                 </div>
                             )}
 
-                            <div className="pt-12 border-t border-neutral-800">
-                                <button
-                                    onClick={handleStartOver}
-                                    className="px-6 py-3 border border-neutral-700 text-neutral-300 rounded-full hover:bg-neutral-800 hover:text-white transition-colors text-sm"
-                                >
-                                    ↺ Start Over
-                                </button>
-                            </div>
 
                         </div>
                     )
