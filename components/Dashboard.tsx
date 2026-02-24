@@ -62,6 +62,7 @@ export default function Dashboard() {
 
     // Step 1: Nickname State
     const [nickname, setNickname] = useState("")
+    const [randomSeed, setRandomSeed] = useState("")
     const [city, setCity] = useState<string | null>(null)
     const [country, setCountry] = useState<string | null>(null)
 
@@ -158,8 +159,10 @@ export default function Dashboard() {
     useEffect(() => {
         if (status === "authenticated") {
             fetchProfileAndPlaylist()
+            // Set initial random seed from user ID or random
+            setRandomSeed(session?.user?.id || Math.random().toString(36).substring(7))
         }
-    }, [status, fetchProfileAndPlaylist])
+    }, [status, fetchProfileAndPlaylist, session?.user?.id])
 
     // Detect city automatically in the background
     useEffect(() => {
@@ -182,10 +185,7 @@ export default function Dashboard() {
     }, [currentStep, city, status])
 
     const handleRandomizeAvatar = () => {
-        const prefixes = ["Electric", "Neon", "Sonic", "Melodic", "Glitch", "Echo", "Synth", "Vibe", "Groove", "Bass", "Digital", "Cosmic"]
-        const suffixes = ["Mume", "Vibe", "Flow", "Soul", "Beat", "Wave", "Spirit", "Synth", "Harmony", "Pulse"]
-        const randomName = `${prefixes[Math.floor(Math.random() * prefixes.length)]} ${suffixes[Math.floor(Math.random() * suffixes.length)]}`
-        setNickname(randomName)
+        setRandomSeed(Math.random().toString(36).substring(7))
     }
 
     const saveStep1 = async () => {
@@ -548,7 +548,7 @@ export default function Dashboard() {
                 {currentStep === 1 && (
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="text-center">
-                            <h2 className="text-3xl font-bold mb-2">Name Your Musical Me</h2>
+                            <h2 className="text-3xl font-bold mb-2">Your Musical Me</h2>
                             <p className="text-sm text-neutral-500">Click the Mume to randomize</p>
                         </div>
 
@@ -558,7 +558,7 @@ export default function Dashboard() {
                         >
                             <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                             <PixelAvatar
-                                seed={nickname || session?.user?.id || 'mume'}
+                                seed={nickname.trim() || randomSeed}
                                 size={160}
                                 className="drop-shadow-[0_0_20px_rgba(34,197,94,0.3)] group-hover:scale-110 transition-transform duration-300"
                             />
@@ -568,7 +568,7 @@ export default function Dashboard() {
                             type="text"
                             value={nickname}
                             onChange={(e) => setNickname(e.target.value)}
-                            placeholder="e.g. Melody Maker"
+                            placeholder="Enter a name for your Mume (e.g. Melody Maker)"
                             className="w-full px-6 py-4 bg-neutral-900 border border-neutral-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-green-500 text-lg text-center"
                         />
                         <button
