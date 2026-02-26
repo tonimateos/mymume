@@ -15,7 +15,7 @@ MuMes can then try to connect with other MuMes, a fun process based on matching 
 
 MuMes know how to sing based on the tasts of their creators. They sing when they are born, and they try to match with other MuMes by singing to them, listeing how others sing and, event trying to sing together.
 
-The project uses state of the art Generative AI deep nets, including [ACE-Step-1.5](https://ace-step.github.io/ace-step-v1.5.github.io/) and [Gemini's Lyria](https://gemini.google/overview/music-generation/). 
+The project uses state of the art Generative AI Music deep nets, including [ACE-Step-1.5](https://ace-step.github.io/ace-step-v1.5.github.io/) and [Gemini's Lyria](https://gemini.google/overview/music-generation/). 
 
 
 ## Current Status
