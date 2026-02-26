@@ -1,47 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MyMuMe 👾
+
+MyMuMe (My Musical Me) is a social platform that transforms your musical taste into a unique digital identity—your **Mume**. Connect your Spotify playlists, analyze your "sonic soul" using Gemini AI, and connect with other users in the MuMe Collective.
+
+## Current Status
+
+The application is currently in active development with the following features implemented:
+- **Identity Creation**: Randomize and name your Mume avatar.
+- **Musical Injection**: Import tracks via public Spotify Playlist URLs or raw text.
+- **Identity Analysis**: Gemini AI-powered analysis of your musical tastes, categorizing them into distinct "sonic personas".
+- **MuMe Collective**: A public feed where you can see other Mumes and test your compatibility with them.
+- **Soulmate Connections**: Establish "positive" connections to unlock and explore the actual song lists of compatible Mumes.
+- **Profile Management**: Reset and delete functionality for a fresh start.
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+- Node.js >= 22.0.0
+- A Spotify Developer account (for Client ID/Secret)
+- A Google Generative AI API Key (Gemini)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### Installation
 
-Open [http://127.0.0.1:3000](http://127.0.0.1:3000) with your browser to see the result.
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/tonimateos/mymume.git
+   cd mymume
+   ```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+3. Configure environment variables:
+   Copy `.env.example` to `.env.local` and fill in your credentials:
+   - `DATABASE_URL` (SQLite by default)
+   - `NEXTAUTH_SECRET`
+   - `SPOTIFY_CLIENT_ID`
+   - `SPOTIFY_CLIENT_SECRET`
+   - `GOOGLE_GENERATIVE_AI_API_KEY`
 
-## Learn More
+4. Initialize the database:
+   ```bash
+   npx prisma migrate dev
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+5. Run the development server:
+   ```bash
+   npm run dev
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Testing Strategy
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+We maintain project robustness through a tiered testing approach, ensuring both internal logic and external integrations work as expected.
 
-## Deploy on Vercel
+### 1. Unit & Integration Tests (Vitest)
+Used for testing individual React components and utility functions in isolation.
+- **Tool**: [Vitest](https://vitest.dev/) + React Testing Library.
+- **Run**: `npm run test:unit`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 2. End-to-End Tests (Playwright)
+Used for verifying full user journeys. To ensure reliability and speed, we use a **Hybrid Mocking Strategy** for Spotify:
+- **Scraper Mocking**: We test the Playwright-based Spotify scraper against local HTML fixtures (`tests/fixtures/`) to verify selector logic without hitting live Spotify servers.
+- **Tool**: [Playwright](https://playwright.dev/).
+- **Run**: `npm run test:e2e`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 3. Coverage
+Monitor how much of the codebase is covered by tests:
+- **Run**: `npm run test:coverage`
 
+## Linting
 
-## Pending Spotify integration
-
-* Go to the Spotify Developer Dashboard and log in.
-* Click Create app.
-* App name: MyMuMe.
-* Redirect URI: You must add `http://127.0.0.1:3000/api/auth/callback/spotify` and `http://127.0.0.1:3000/api/auth/callback/google` to your respective provider configs.
-* Click Save.
-* Click on your new app to see the Settings.
-* Copy the Client ID and Client Secret (you might need to click "View client secret") into your .env.local.
+Keep the codebase clean:
+- **Run**: `npm run lint`
