@@ -11,16 +11,16 @@ MyMyMe allows you to confer your musical identity in a simple, fast and fun way,
 
 MuMes can then try to connect with other MuMes, a fun process based on matching their sonic personas. Successfully connecting allows discovery of other MuMes songs, and soon, chats and other interactions.
 
-# The Fun Part => AI Generative Music
+## The Fun Part: AI Generative Music
 
 MuMes know how to sing based on the tasts of their creators. They sing when they are born, and they try to match with other MuMes by singing to them, listeing how others sing and, event trying to sing together.
 
-The project uses state of the art Generative AI deep nets, including [ACE-Step-1.5](https://ace-step.github.io/ace-step-v1.5.github.io/) and [Gemini's Lyria](https://makersuite.google.com/lyria). 
+The project uses state of the art Generative AI deep nets, including [ACE-Step-1.5](https://ace-step.github.io/ace-step-v1.5.github.io/) and [Gemini's Lyria](https://gemini.google/overview/music-generation/). 
 
 
 ## Current Status
 
-The application is being Vibe coded. So far, total time spent by a human is about 4 hours.
+The application is being Vibe coded using Antigravity. So far, total time spent by a human is about 4 hours. The deploy uses the Digital Ocean App Platform.
 
 Songs are static, not generated on the fly, they have been produced with the aforementioned networks. We'll soon move from mocks to generated songs.
 
