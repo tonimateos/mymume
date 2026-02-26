@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useSession, signOut } from "next-auth/react"
 import { useSearchParams } from "next/navigation"
-import Image from "next/image"
 import PixelAvatar from "./PixelAvatar"
 
 interface SpotifyPlaylist {
@@ -64,7 +63,6 @@ export default function Dashboard() {
     const [nickname, setNickname] = useState("")
     const [randomSeed, setRandomSeed] = useState("")
     const [city, setCity] = useState<string | null>(null)
-    const [country, setCountry] = useState<string | null>(null)
 
     // Step 2: Voice & Attributes State
     const [voiceType, setVoiceType] = useState<"MALE" | "FEMALE" | "ANY" | null>(null)
@@ -111,7 +109,6 @@ export default function Dashboard() {
                 // Load data into state
                 if (data.nickname) setNickname(data.nickname)
                 if (data.city) setCity(data.city)
-                if (data.country) setCountry(data.country)
                 if (data.voiceType) setVoiceType(data.voiceType)
                 if (data.musicalAttributes) {
                     try {
@@ -177,7 +174,6 @@ export default function Dashboard() {
                         const data = await res.json()
                         console.log("City data:", data)
                         if (data.city) setCity(data.city)
-                        if (data.country) setCountry(data.country)
                     }
                 } catch (err) {
                     console.error("City detection failed:", err)
@@ -248,7 +244,6 @@ export default function Dashboard() {
                 setCurrentStep(1)
                 setNickname("")
                 setCity(null)
-                setCountry(null)
                 setVoiceType(null)
                 setSelectedAttributes([])
                 setRandomSeed(session?.user?.id || Math.random().toString(36).substring(7))
