@@ -7,7 +7,7 @@ It is based on:
 * the assumption that for many people, the music they listen to is a reflection of their personality and character,
 * the fact that "the music they listen to" can be conventiently speficied wtih only one or two links to the playlists they've built over time.
 
-MyMyMe allows you to confer your musical identity in a simple, fast and fun way, by creating your MuMe (your Musical Me).
+MyMuMe allows you to confer your musical identity in a simple, fast and fun way, by creating your MuMe (your Musical Me).
 
 MuMes can then try to connect with other MuMes, a fun process based on matching their sonic personas. Successfully connecting allows discovery of other MuMes songs, and soon, chats and other interactions.
 
