@@ -24,12 +24,10 @@ The application is being Vibe coded using Antigravity. So far, total time spent 
 
 Songs are static, not generated on the fly, they have been produced with the aforementioned networks. We'll soon move from mocks to generated songs.
 
-
 ## Getting Started
 
 ### Prerequisites
 - Node.js >= 22.0.0
-- A Spotify Developer account (for Client ID/Secret)
 - A Google Generative AI API Key (Gemini)
 
 ### Installation
@@ -49,8 +47,6 @@ Songs are static, not generated on the fly, they have been produced with the afo
    Copy `.env.example` to `.env.local` and fill in your credentials:
    - `DATABASE_URL` (SQLite by default)
    - `NEXTAUTH_SECRET`
-   - `SPOTIFY_CLIENT_ID`
-   - `SPOTIFY_CLIENT_SECRET`
    - `GOOGLE_GENERATIVE_AI_API_KEY`
 
 4. Initialize the database:
