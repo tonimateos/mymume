@@ -82,3 +82,15 @@ Monitor how much of the codebase is covered by tests:
 
 Keep the codebase clean:
 - **Run**: `npm run lint`
+
+---
+
+## Interested in contributing? 🤝
+
+We welcome contributions of all kinds! Whether you're fixing a bug, suggesting a new feature, or improving documentation, your help is appreciated.
+
+1. **Fork** the repository.
+2. **Create a branch** for your feature or fix.
+3. **Open a Pull Request** describing your changes.
+
+Let's build the future of musical identity together! 🚀
