@@ -5,7 +5,7 @@ MyMuMe (My Musical Me) is a social platform that encourages people to connect if
 It is based on:
 
 * the assumption that for many people, the music they listen to is a reflection of their personality and character,
-* the fact that "the music they listen to" can be conventiently speficied wtih only one or two links to the playlists they've built over time.
+* the fact that "the music they listen to" can be conveniently specified with only one or two links to the playlists they've built over time.
 
 MyMuMe allows you to confer your musical identity in a simple, fast and fun way, by creating your MuMe (your Musical Me).
 
@@ -13,7 +13,7 @@ MuMes can then try to connect with other MuMes, a fun process based on matching 
 
 ## The Fun Part: AI Generative Music
 
-MuMes know how to sing based on the tasts of their creators. They sing when they are born, and they try to match with other MuMes by singing to them, listeing how others sing and, event trying to sing together.
+MuMes know how to sing based on the tastes of their creators. They sing when they are born, and they try to match with other MuMes by singing to them, listening how others sing and, even trying to sing together.
 
 The project uses state of the art Generative AI Music deep nets, including [ACE-Step-1.5](https://ace-step.github.io/ace-step-v1.5.github.io/) and [Gemini's Lyria](https://gemini.google/overview/music-generation/). 
 
