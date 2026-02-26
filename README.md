@@ -1,16 +1,29 @@
 # MyMuMe 👾
 
-MyMuMe (My Musical Me) is a social platform that transforms your musical taste into a unique digital identity—your **Mume**. Connect your Spotify playlists, analyze your "sonic soul" using Gemini AI, and connect with other users in the MuMe Collective.
+MyMuMe (My Musical Me) is a social platform that encourages people to connect if their musical tastes are similar.
+
+It is based on:
+
+* the assumption that for many people, the music they listen to is a reflection of their personality and character,
+* the fact that "the music they listen to" can be conventiently speficied wtih only one or two links to the playlists they've built over time.
+
+MyMyMe allows you to confer your musical identity in a simple, fast and fun way, by creating your MuMe (your Musical Me).
+
+MuMes can then try to connect with other MuMes, a fun process based on matching their sonic personas. Successfully connecting allows discovery of other MuMes songs, and soon, chats and other interactions.
+
+# The Fun Part => AI Generative Music
+
+MuMes know how to sing based on the tasts of their creators. They sing when they are born, and they try to match with other MuMes by singing to them, listeing how others sing and, event trying to sing together.
+
+The project uses state of the art Generative AI deep nets, including [ACE-Step-1.5](https://ace-step.github.io/ace-step-v1.5.github.io/) and [Gemini's Lyria](https://makersuite.google.com/lyria). 
+
 
 ## Current Status
 
-The application is currently in active development with the following features implemented:
-- **Identity Creation**: Randomize and name your Mume avatar.
-- **Musical Injection**: Import tracks via public Spotify Playlist URLs or raw text.
-- **Identity Analysis**: Gemini AI-powered analysis of your musical tastes, categorizing them into distinct "sonic personas".
-- **MuMe Collective**: A public feed where you can see other Mumes and test your compatibility with them.
-- **Soulmate Connections**: Establish "positive" connections to unlock and explore the actual song lists of compatible Mumes.
-- **Profile Management**: Reset and delete functionality for a fresh start.
+The application is being Vibe coded. So far, total time spent by a human is about 4 hours.
+
+Songs are static, not generated on the fly, they have been produced with the aforementioned networks. We'll soon move from mocks to generated songs.
+
 
 ## Getting Started
 
