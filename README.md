@@ -29,7 +29,7 @@ The application is currently in active development with the following features i
 
 2. Install dependencies:
    ```bash
-   npm install
+   npm ci
    ```
 
 3. Configure environment variables:
